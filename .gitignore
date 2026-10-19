@@ -1,0 +1,22 @@
+# sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# secretos y entorno
+.env
+.env.*
+*.pem
+*.key
+
+# Node y TypeScript
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+*.log
+
+# editores
+.vscode/
+.idea/
