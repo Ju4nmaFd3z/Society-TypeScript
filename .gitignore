@@ -6,6 +6,7 @@ desktop.ini
 # secretos y entorno
 .env
 .env.*
+!.env.example
 *.pem
 *.key
 
