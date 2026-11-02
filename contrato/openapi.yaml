@@ -1,0 +1,307 @@
+openapi: 3.0.3
+info:
+  title: Society API
+  version: 0.1.0
+  description: |
+    API propia de Society. El cliente solo hablan con esta API y con Supabase.
+servers:
+  - url: /api/v1
+tags:
+  - name: Places
+    description: Búsqueda de locales y fotos.
+
+paths:
+  /places/search:
+    get:
+      operationId: buscarLugares
+      summary: Buscar negocios por texto
+      description: |
+        Busca negocios por texto y devuelve una página de resultados. Alimenta la pantalla 02 «Busca tu local»: Se carga lazy list pidiendo la página siguiente con `pageToken` mientras exista
+        `nextPageToken`.
+
+        Si la búsqueda no encuentra locales, responde 200 con `resultados` vacío (estado
+        «vacío» de la pantalla). Un texto vacío es un 400.
+
+        La clave de Google solo vive en el servidor (D-05) y nunca llega al cliente.
+
+        No se guarda nada: ni la búsqueda ni los resultados (D-06).
+      tags: [Places]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Nombre del local o zona. Si viene vacío, la respuesta es 400.
+          schema:
+            type: string
+            minLength: 1
+          example: Peluquería X
+        - name: pageToken
+          in: query
+          required: false
+          description: Token de la página siguiente (`nextPageToken` de una respuesta anterior).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Página de resultados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusquedaRespuesta'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+
+  /places/photo:
+    get:
+      operationId: obtenerFotoLugar
+      summary: Obtener la URL de la foto de un negocio
+      description: |
+        Devuelve la URL de una foto, para pintar las imágenes de la tarjeta de local.
+
+        No se guarda nada: ni la foto ni su URL (D-06).
+      tags: [Places]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: name
+          in: query
+          required: true
+          description: Elemento de `fotoNames` de un `LugarRespuesta`.
+          schema:
+            type: string
+          example: places/ChIJ.../photos/AUc7...
+        - name: maxWidthPx
+          in: query
+          required: true
+          description: Ancho máximo de la imagen en píxeles.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4800
+          example: 400
+      responses:
+        '200':
+          description: URL de la foto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FotoRespuesta'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+
+  /places/{placeId}:
+    get:
+      operationId: obtenerDetalleLugar
+      summary: Obtener los datos completos de un negocio
+      description: |
+        Devuelve los datos completos del local elegido. Se pide una sola vez, cuando el
+        usuario confirma «Es mi local», con el `placeId` de un resultado de
+        `/places/search` o del clic en el mapa.
+
+        La clave de Google solo vive en el servidor (D-05) y nunca llega al cliente.
+
+        No se guarda nada: ni el `placeId` consultado ni los datos devueltos (D-06).
+      tags: [Places]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: placeId
+          in: path
+          required: true
+          description: Identificador del local (`placeId` de un resultado de búsqueda).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Datos del negocio.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LugarRespuesta'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT de la sesión de Supabase Auth.
+
+  schemas:
+    BusquedaRespuesta:
+      type: object
+      required: [resultados]
+      properties:
+        resultados:
+          type: array
+          items:
+            $ref: '#/components/schemas/LugarRespuesta'
+        nextPageToken:
+          type: string
+          description: Ausente cuando no hay más páginas.
+
+    FotoRespuesta:
+      type: object
+      required: [photoUri]
+      properties:
+        photoUri:
+          type: string
+          format: uri
+
+    LugarRespuesta:
+      type: object
+      description: |
+        Datos de un local. `/places/search` devuelve solo los campos de la tarjeta; `/places/{placeId}` devuelve todos los que tenga el local.
+      required: [placeId, nombre]
+      properties:
+        placeId:
+          type: string
+        nombre:
+          type: string
+          description: Nombre del local (`displayName`).
+        tipos:
+          type: array
+          description: Categorías del local (`types`).
+          items:
+            type: string
+        estadoNegocio:
+          type: string
+          description: Estado operativo actual (`businessStatus`).
+          enum: [OPERATIONAL, CLOSED_TEMPORARILY, CLOSED_PERMANENTLY]
+        direccion:
+          type: string
+          description: Dirección postal (`formattedAddress`).
+        componentesDireccion:
+          type: array
+          description: Dirección desglosada en calle, ciudad, código postal… (`addressComponents`).
+          items:
+            $ref: '#/components/schemas/ComponenteDireccion'
+        ubicacion:
+          $ref: '#/components/schemas/Ubicacion'
+        telefono:
+          type: string
+          description: Teléfono nacional (`nationalPhoneNumber`). Ausente si no consta.
+        web:
+          type: string
+          format: uri
+          description: Web del negocio (`websiteUri`). Ausente si no consta.
+        googleMapsUri:
+          type: string
+          format: uri
+        valoracion:
+          type: number
+          format: float
+          description: Media de reseñas.
+        numResenas:
+          type: integer
+          description: Número total de reseñas.
+        resumenEditorial:
+          type: string
+          description: Resumen editorial de Google (`editorialSummary`). Ausente en muchos locales.
+        fotoNames:
+          type: array
+          description: Cada valor se pasa como `name` a `/places/photo`. Ausente si el negocio no tiene fotos.
+          items:
+            type: string
+
+    ComponenteDireccion:
+      type: object
+      properties:
+        nombre:
+          type: string
+        nombreCorto:
+          type: string
+        tipos:
+          type: array
+          items:
+            type: string
+
+    Ubicacion:
+      type: object
+      required: [latitud, longitud]
+      properties:
+        latitud:
+          type: number
+          format: double
+        longitud:
+          type: number
+          format: double
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, retryable]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            retryable:
+              type: boolean
+              description: |
+                Indica si tiene sentido reintentar. Los GET se reintentan hasta 3 veces;
+                los POST nunca de forma automática.
+
+  responses:
+    Error400:
+      description: Petición incorrecta, por ejemplo texto de búsqueda vacío.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Error401:
+      description: JWT ausente, caducado o no válido.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Error404:
+      description: No existe un local con ese `placeId`.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Error429:
+      description: Demasiadas peticiones.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Error503:
+      description: El proveedor (API de Google) no está disponible.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: PROVEEDOR_NO_DISPONIBLE
+              message: El proveedor no está disponible
+              retryable: true
