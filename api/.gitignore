@@ -1,0 +1,2 @@
+# Cliente de Prisma: se genera con `prisma generate` (también al hacer npm install)
+src/generated/
