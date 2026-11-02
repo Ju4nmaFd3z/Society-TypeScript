@@ -1,0 +1,50 @@
+// Modelo de datos de SOCIETY. Fuente: docs/mvp/diccionario_datos.md §3.
+// Nombres en castellano y snake_case (D-21), igual en Prisma que en Postgres.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Datos de la cuenta que no están en Supabase Auth.
+// id es el mismo uuid que auth.users.id.
+model perfil_usuario {
+  id                    String       @id @db.Uuid
+  email                 String
+  nombre                String?
+  terminos_version      String
+  terminos_aceptados_en DateTime     @db.Timestamptz(6)
+  creado_en             DateTime     @default(now()) @db.Timestamptz(6)
+  restaurante           restaurante?
+}
+
+// El local. En el MVP, un restaurante por usuario (owner_id único, D-13).
+model restaurante {
+  id                     String         @id @default(uuid()) @db.Uuid
+  owner_id               String         @unique @db.Uuid
+  owner                  perfil_usuario @relation(fields: [owner_id], references: [id], onDelete: Cascade)
+  origen                 String // GOOGLE · MANUAL
+  google_place_id        String?        @unique
+  nombre                 String
+  apodo                  String?
+  tipo                   String? // RESTAURANTE · BAR · CAFETERIA · OTRO
+  direccion              String
+  municipio              String
+  provincia              String?
+  latitud                Float?
+  longitud               Float?
+  telefono               String?
+  tipo_google            String?
+  horario                Json?
+  google_maps_uri        String?
+  datos_google_leidos_en DateTime?      @db.Timestamptz(6)
+  alta_estado            String         @default("CREADO") // CREADO · ANALIZANDO · PENDIENTE_CONFIRMAR · COMPLETADA
+  declara_gestor_en      DateTime       @db.Timestamptz(6)
+  creado_en              DateTime       @default(now()) @db.Timestamptz(6)
+  actualizado_en         DateTime       @updatedAt @db.Timestamptz(6)
+}
