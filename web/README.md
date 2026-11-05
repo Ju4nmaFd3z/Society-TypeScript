@@ -27,3 +27,11 @@ La aplicación queda disponible en http://localhost:4200.
 
 El resultado se genera en `web/dist/web/browser`.
 
+## Estilos
+
+El panel usa Tailwind CSS con el tema «papel y cristal» de Figma.
+
+- El tema (colores, tipografías, radios y sombras) está en `src/styles.css`, dentro de `@theme`.
+- Clases base: `.hoja-cristal`, `.tarjeta-cristal` y `.boton-amarillo`.
+- Las fuentes Nunito y DynaPuff se instalan con npm (`@fontsource-variable`), sin servicios externos.
+

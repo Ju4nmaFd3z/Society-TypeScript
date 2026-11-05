@@ -1,1 +1,94 @@
-/* You can add global styles to this file, and also import other style files */
+@import "tailwindcss";
+
+/* Tipografías */
+@import "@fontsource-variable/nunito";
+@import "@fontsource-variable/dynapuff";
+
+
+/*
+ * Tema «papel y cristal» · Figma v3 · Cristal líquido.
+ */
+@theme {
+
+  /*Prioridad para el texto lectura*/
+  --font-sans: "Nunito Variable", system-ui, sans-serif;
+
+  /*Prioridad para el texto destacado*/
+  --font-display: "DynaPuff Variable", "Nunito Variable", system-ui, sans-serif;
+
+  /* Colores de marca */
+  --color-papel: #f1ece3;
+  --color-papel-claro: #fbf8f2;
+  --color-tinta: #16161a;
+  --color-tinta-claro: #5c5966;
+  --color-marca-azul: #2440e0;
+  --color-marca-amarillo: #f5c518;
+
+  /* Radios */
+  --radius-hoja: 45px;
+  --radius-tarjeta: 20px;
+  --radius-boton: 27px;
+  --radius-chip: 15px;
+
+  /* Sombras */
+  --shadow-cristal: 0 18px 36px rgb(12 16 40 / 0.42), 0 2px 6px rgb(12 16 40 / 0.18);
+  --shadow-boton-amarillo: 0 10px 9px rgb(170 120 0 / 0.7);
+}
+
+@layer base {
+  html { font-family: var(--font-sans); }
+  body {
+    background-color: var(--color-papel);
+    color: var(--color-tinta);
+    -webkit-font-smoothing: antialiased; /*Suaviza el texto para Safari y Chrome macOS*/
+  }
+}
+
+@layer components {
+  .hoja-cristal,
+  .tarjeta-cristal {
+    --brillo-cristal: inset 0 1.5px 0 rgb(255 255 255 / 0.85), inset 0 -1px 0 rgb(255 255 255 / 0.3);
+  }
+
+  /* Hoja grande */
+  .hoja-cristal {
+    border-radius: var(--radius-hoja);
+    background: linear-gradient(to bottom, rgb(255 255 255 / 0.7), rgb(255 255 255 / 0.62));
+    -webkit-backdrop-filter: blur(22px); /*blur para Safari y Chrome macOS*/
+    backdrop-filter: blur(22px);
+    box-shadow: var(--shadow-cristal), var(--brillo-cristal);
+  }
+
+  /* Tarjeta de cristal */
+  .tarjeta-cristal {
+    border-radius: var(--radius-tarjeta);
+    background: linear-gradient(to bottom, rgb(145 145 145 / 0.35), rgb(255 255 255 / 0.51));
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+    box-shadow: var(--shadow-cristal), var(--brillo-cristal);
+  }
+
+  /* Botón principal amarillo */
+  .boton-amarillo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 54px;
+    padding-inline: 1.5rem;
+    border-radius: var(--radius-boton);
+    background-color: var(--color-marca-amarillo);
+    color: var(--color-tinta);
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow:
+      var(--shadow-boton-amarillo),
+      inset 0 1.5px 0 rgb(255 255 255 / 0.65),
+      inset 0 -2px 0 rgb(150 100 0 / 0.18);
+    transition: filter 150ms ease, transform 150ms ease;
+  }
+  .boton-amarillo:hover { filter: brightness(0.96); }
+  .boton-amarillo:active { transform: scale(0.98); }
+  .boton-amarillo:focus-visible { outline: 3px solid var(--color-marca-azul); outline-offset: 3px; }
+  .boton-amarillo:disabled { opacity: 0.5; cursor: not-allowed; }
+}
