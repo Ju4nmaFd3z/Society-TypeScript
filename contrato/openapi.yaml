@@ -3,7 +3,7 @@ info:
   title: Society API
   version: 0.1.0
   description: |
-    API propia de Society. El cliente solo hablan con esta API y con Supabase.
+    API propia de Society. Los clientes solo hablan con esta API y con Supabase.
 servers:
   - url: /api/v1
 tags:
@@ -16,15 +16,19 @@ paths:
       operationId: buscarLugares
       summary: Buscar negocios por texto
       description: |
-        Busca negocios por texto y devuelve una página de resultados. Alimenta la pantalla 02 «Busca tu local»: Se carga lazy list pidiendo la página siguiente con `pageToken` mientras exista
-        `nextPageToken`.
+        Busca negocios por texto y devuelve una página de resultados. Alimenta la pantalla
+        02 «Busca tu local»: la lista se carga de forma lazy, pidiendo la página siguiente
+        con `pageToken` mientras exista `nextPageToken`.
 
-        Si la búsqueda no encuentra locales, responde 200 con `resultados` vacío (estado
-        «vacío» de la pantalla). Un texto vacío es un 400.
+        Cada resultado trae solo los campos de la tarjeta: `placeId`, `nombre`,
+        `direccion`, `valoracion`, `numResenas`, `fotoName`, `fotoAtribuciones` y
+        `googleMapsUri`.
 
-        La clave de Google solo vive en el servidor (D-05) y nunca llega al cliente.
+        Si la búsqueda no encuentra locales, responde 200 con `resultados` vacío. Un texto vacío es un 400.
 
-        No se guarda nada: ni la búsqueda ni los resultados (D-06).
+        Internamente la API llama a Google Places (Text Search,
+        `POST /v1/places:searchText`) con un `X-Goog-FieldMask` que limita la respuesta
+
       tags: [Places]
       security:
         - bearerAuth: []
@@ -36,7 +40,7 @@ paths:
           schema:
             type: string
             minLength: 1
-          example: Peluquería X
+          example: Bar El Boquerón Dorado Torrox
         - name: pageToken
           in: query
           required: false
@@ -45,7 +49,7 @@ paths:
             type: string
       responses:
         '200':
-          description: Página de resultados
+          description: Página de resultados.
           content:
             application/json:
               schema:
@@ -64,9 +68,10 @@ paths:
       operationId: obtenerFotoLugar
       summary: Obtener la URL de la foto de un negocio
       description: |
-        Devuelve la URL de una foto, para pintar las imágenes de la tarjeta de local.
+        Devuelve la URL de una foto para pintar la imagen de la tarjeta de local.
 
-        No se guarda nada: ni la foto ni su URL (D-06).
+        Internamente la API llama a Google Places (Place Photos,
+        `GET /v1/{name}/media?skipHttpRedirect=true`).
       tags: [Places]
       security:
         - bearerAuth: []
@@ -74,10 +79,10 @@ paths:
         - name: name
           in: query
           required: true
-          description: Elemento de `fotoNames` de un `LugarRespuesta`.
+          description: Valor de `fotoName` sacado de `LugarRespuesta`.
           schema:
             type: string
-          example: places/ChIJ.../photos/AUc7...
+          example: places/ChIJ9x2Lb0xQcQ0RB0qUe1Dorado/photos/AUc7tXbFotoBoqueron
         - name: maxWidthPx
           in: query
           required: true
@@ -86,7 +91,7 @@ paths:
             type: integer
             minimum: 1
             maximum: 4800
-          example: 400
+          example: 800
       responses:
         '200':
           description: URL de la foto.
@@ -109,12 +114,11 @@ paths:
       summary: Obtener los datos completos de un negocio
       description: |
         Devuelve los datos completos del local elegido. Se pide una sola vez, cuando el
-        usuario confirma «Es mi local», con el `placeId` de un resultado de
-        `/places/search` o del clic en el mapa.
+        usuario confirma «Es mi local».
 
-        La clave de Google solo vive en el servidor (D-05) y nunca llega al cliente.
+        Internamente la API llama a Google Places (Place Details,
+        `GET /v1/places/{placeId}`) con un `X-Goog-FieldMask`.
 
-        No se guarda nada: ni el `placeId` consultado ni los datos devueltos (D-06).
       tags: [Places]
       security:
         - bearerAuth: []
@@ -125,6 +129,7 @@ paths:
           description: Identificador del local (`placeId` de un resultado de búsqueda).
           schema:
             type: string
+          example: ChIJ9x2Lb0xQcQ0RB0qUe1Dorado
       responses:
         '200':
           description: Datos del negocio.
@@ -158,11 +163,25 @@ components:
       properties:
         resultados:
           type: array
+          description: Locales de esta página. Vacío si la búsqueda no encuentra nada.
           items:
             $ref: '#/components/schemas/LugarRespuesta'
         nextPageToken:
           type: string
           description: Ausente cuando no hay más páginas.
+      example:
+        resultados:
+          - placeId: ChIJ9x2Lb0xQcQ0RB0qUe1Dorado
+            nombre: Bar El Boquerón Dorado
+            direccion: Calle Reyes Católicos, 120, 29770 Torrox, Málaga, España
+            valoracion: 4.8
+            numResenas: 695
+            googleMapsUri: https://maps.google.com/?cid=1234567890123456789
+            fotoName: places/ChIJ9x2Lb0xQcQ0RB0qUe1Dorado/photos/AUc7tXbFotoBoqueron
+            fotoAtribuciones:
+              - nombre: Marta R.
+                uri: https://maps.google.com/maps/contrib/100000000000000000000
+        nextPageToken: AeJbb3dTokenSiguientePagina
 
     FotoRespuesta:
       type: object
@@ -171,23 +190,38 @@ components:
         photoUri:
           type: string
           format: uri
+      example:
+        photoUri: https://lh3.googleusercontent.com/places/AUc7tXbFotoBoqueron=s800
+
+    Atribucion:
+      type: object
+      description: Autor de una foto.
+      required: [nombre]
+      properties:
+        nombre:
+          type: string
+          description: Nombre del autor de la foto.
+        uri:
+          type: string
+          format: uri
+          description: Perfil del autor. Ausente si no consta.
 
     LugarRespuesta:
       type: object
       description: |
-        Datos de un local. `/places/search` devuelve solo los campos de la tarjeta; `/places/{placeId}` devuelve todos los que tenga el local.
+        Datos de un local. `/places/search` devuelve solo los campos de la tarjeta;
+        `/places/{placeId}` devuelve todos los que tenga el local.
       required: [placeId, nombre]
       properties:
         placeId:
           type: string
+          description: Identificador del local en Google (`id`).
         nombre:
           type: string
           description: Nombre del local (`displayName`).
-        tipos:
-          type: array
-          description: Categorías del local (`types`).
-          items:
-            type: string
+        tipoPrincipal:
+          type: string
+          description: Categoría principal del local (`primaryType`). Ausente si Google no tiene una clara.
         estadoNegocio:
           type: string
           description: Estado operativo actual (`businessStatus`).
@@ -212,31 +246,139 @@ components:
         googleMapsUri:
           type: string
           format: uri
+          description: Enlace al local en Google Maps.
         valoracion:
           type: number
           format: float
-          description: Media de reseñas.
+          description: Media de reseñas (`rating`).
         numResenas:
           type: integer
-          description: Número total de reseñas.
+          description: Número total de reseñas (`userRatingCount`).
         resumenEditorial:
           type: string
           description: Resumen editorial de Google (`editorialSummary`). Ausente en muchos locales.
-        fotoNames:
+        horario:
+          $ref: '#/components/schemas/Horario'
+        fotoName:
+          type: string
+          description: |
+            Una foto del local. Se pasa como `name` a `/places/photo`.
+            Ausente si el negocio no tiene fotos.
+        fotoAtribuciones:
           type: array
-          description: Cada valor se pasa como `name` a `/places/photo`. Ausente si el negocio no tiene fotos.
+          description: |
+            Autores de la foto indicada en `fotoName`. Hay que mostrarlos junto a la imagen
+            cuando existan. Ausente si el negocio no tiene fotos.
+          items:
+            $ref: '#/components/schemas/Atribucion'
+      example:
+        placeId: ChIJ9x2Lb0xQcQ0RB0qUe1Dorado
+        nombre: Bar El Boquerón Dorado
+        tipoPrincipal: bar
+        estadoNegocio: OPERATIONAL
+        direccion: Calle Reyes Católicos, 120, 29770 Torrox, Málaga, España
+        componentesDireccion:
+          - nombre: '120'
+            nombreCorto: '120'
+            tipos: [street_number]
+          - nombre: Calle Reyes Católicos
+            nombreCorto: C. Reyes Católicos
+            tipos: [route]
+          - nombre: Torrox
+            nombreCorto: Torrox
+            tipos: [locality, political]
+          - nombre: Málaga
+            nombreCorto: MA
+            tipos: [administrative_area_level_2, political]
+          - nombre: '29770'
+            nombreCorto: '29770'
+            tipos: [postal_code]
+        ubicacion:
+          latitud: 36.757
+          longitud: -3.9525
+        telefono: 952 11 22 33
+        web: https://www.elboquerondorado.example
+        googleMapsUri: https://maps.google.com/?cid=1234567890123456789
+        valoracion: 4.8
+        numResenas: 695
+        resumenEditorial: Bar de tapas y pescado frito con terraza, en pleno centro de Torrox.
+        horario:
+          periodos:
+            - { abre: { dia: 2, hora: 12, minuto: 0 }, cierra: { dia: 2, hora: 23, minuto: 30 } }
+            - { abre: { dia: 3, hora: 12, minuto: 0 }, cierra: { dia: 3, hora: 23, minuto: 30 } }
+            - { abre: { dia: 4, hora: 12, minuto: 0 }, cierra: { dia: 4, hora: 23, minuto: 30 } }
+            - { abre: { dia: 5, hora: 12, minuto: 0 }, cierra: { dia: 6, hora: 0, minuto: 30 } }
+            - { abre: { dia: 6, hora: 12, minuto: 0 }, cierra: { dia: 0, hora: 0, minuto: 30 } }
+            - { abre: { dia: 0, hora: 12, minuto: 0 }, cierra: { dia: 0, hora: 17, minuto: 0 } }
+          descripcionSemanal:
+            - 'lunes: Cerrado'
+            - 'martes: 12:00–23:30'
+            - 'miércoles: 12:00–23:30'
+            - 'jueves: 12:00–23:30'
+            - 'viernes: 12:00–00:30'
+            - 'sábado: 12:00–00:30'
+            - 'domingo: 12:00–17:00'
+        fotoName: places/ChIJ9x2Lb0xQcQ0RB0qUe1Dorado/photos/AUc7tXbFotoBoqueron
+        fotoAtribuciones:
+          - nombre: Marta R.
+            uri: https://maps.google.com/maps/contrib/100000000000000000000
+
+    Horario:
+      type: object
+      description: |
+        Horario habitual del local (`regularOpeningHours`). Ausente si Google no lo tiene.
+        Los días se numeran como en Google: 0 es domingo, 1 lunes, 6 sábado.
+      properties:
+        periodos:
+          type: array
+          description: Tramos de apertura. Un local cerrado todo un día no tiene tramo ese día.
+          items:
+            $ref: '#/components/schemas/PeriodoHorario'
+        descripcionSemanal:
+          type: array
+          description: Una línea por día, ya en español y lista para mostrar.
           items:
             type: string
+
+    PeriodoHorario:
+      type: object
+      required: [abre, cierra]
+      properties:
+        abre:
+          $ref: '#/components/schemas/InstanteHorario'
+        cierra:
+          $ref: '#/components/schemas/InstanteHorario'
+
+    InstanteHorario:
+      type: object
+      required: [dia, hora, minuto]
+      properties:
+        dia:
+          type: integer
+          minimum: 0
+          maximum: 6
+          description: 0 domingo, 1 lunes… 6 sábado.
+        hora:
+          type: integer
+          minimum: 0
+          maximum: 23
+        minuto:
+          type: integer
+          minimum: 0
+          maximum: 59
 
     ComponenteDireccion:
       type: object
       properties:
         nombre:
           type: string
+          description: Nombre completo (`longText`).
         nombreCorto:
           type: string
+          description: Nombre abreviado (`shortText`).
         tipos:
           type: array
+          description: Qué parte de la dirección es (`types`), por ejemplo `route` o `postal_code`.
           items:
             type: string
 
@@ -251,6 +393,28 @@ components:
           type: number
           format: double
 
+    CodigoError:
+      type: string
+      description: |
+        Código común de error. Android y la web lo traducen a su error interno.
+        - `VALIDACION`: entrada no válida o JSON mal formado.
+        - `SESION_CADUCADA`: JWT ausente, caducado o no válido.
+        - `NO_ENCONTRADO`: no existe el recurso o la ruta.
+        - `DUPLICADO`: el recurso ya existe.
+        - `MODERACION`: la IA bloqueó el contenido.
+        - `LIMITE_ALCANZADO`: demasiadas peticiones o límite alcanzado.
+        - `INTERNO`: error inesperado, sin detalles al cliente.
+        - `PROVEEDOR_NO_DISPONIBLE`: Google, Gemini, Higgsfield o Instagram no responden.
+      enum:
+        - VALIDACION
+        - SESION_CADUCADA
+        - NO_ENCONTRADO
+        - DUPLICADO
+        - MODERACION
+        - LIMITE_ALCANZADO
+        - INTERNO
+        - PROVEEDOR_NO_DISPONIBLE
+
     Error:
       type: object
       required: [error]
@@ -260,9 +424,10 @@ components:
           required: [code, message, retryable]
           properties:
             code:
-              type: string
+              $ref: '#/components/schemas/CodigoError'
             message:
               type: string
+              description: Mensaje legible. Nunca incluye claves ni respuestas de Google.
             retryable:
               type: boolean
               description: |
@@ -276,24 +441,44 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: VALIDACION
+              message: El parámetro q es obligatorio
+              retryable: false
     Error401:
       description: JWT ausente, caducado o no válido.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: SESION_CADUCADA
+              message: Falta la sesión o ha caducado
+              retryable: false
     Error404:
       description: No existe un local con ese `placeId`.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: NO_ENCONTRADO
+              message: No existe un local con ese placeId
+              retryable: false
     Error429:
       description: Demasiadas peticiones.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: LIMITE_ALCANZADO
+              message: Demasiadas peticiones, inténtalo en un momento
+              retryable: true
     Error503:
       description: El proveedor (API de Google) no está disponible.
       content:
