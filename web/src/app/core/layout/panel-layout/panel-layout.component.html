@@ -1,0 +1,33 @@
+<div class="pared grid h-screen grid-cols-[16rem_1fr] grid-rows-[auto_1fr] gap-espacio-16 p-espacio-16">
+  <!-- Cabecera: a todo el ancho, por encima de la barra lateral -->
+  <header class="cristal-estandar relative col-span-2 flex items-center justify-between rounded-tarjeta-destacada px-espacio-16 py-espacio-12">
+    <div class="flex items-center gap-espacio-16">
+      <span class="w-[13rem] font-display text-titulo-pantalla-24 text-azul-society">Society</span>
+      <div class="flex flex-col">
+        <span class="text-etiqueta-sobretitulo-11-5 uppercase text-texto-terciario">Tu local</span>
+        <span class="text-cuerpo-destacado-15 text-tinta">{{ nombreLocal() }}</span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-espacio-12">
+      <span class="text-cuerpo-secundario-12-5 text-texto-secundario">{{ cuenta() }}</span>
+      <span class="flex size-10 items-center justify-center rounded-full bg-azul text-cuerpo-destacado-15 text-blanco" aria-hidden="true">
+        {{ inicialCuenta() }}
+      </span>
+    </div>
+  </header>
+
+  <!-- Barra lateral -->
+  <aside class="cristal-denso relative overflow-y-auto rounded-tarjeta-destacada p-espacio-12">
+    <nav aria-label="Navegación del panel" class="flex flex-col gap-espacio-6">
+      @for (elemento of navegacion; track elemento.ruta) {
+        <a class="item-navegacion" [routerLink]="elemento.ruta" routerLinkActive="activo">{{ elemento.etiqueta }}</a>
+      }
+    </nav>
+  </aside>
+
+  <!-- Área de contenido -->
+  <main class="relative min-h-0 overflow-y-auto">
+    <router-outlet />
+  </main>
+</div>
