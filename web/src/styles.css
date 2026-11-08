@@ -1,1 +1,181 @@
-/* You can add global styles to this file, and also import other style files */
+@import "tailwindcss";
+
+/* Tipografías */
+@import "@fontsource-variable/nunito";
+@import "@fontsource-variable/dynapuff";
+
+/*
+ * Tema «papel y cristal» . Figma Society [Final Version]
+ */
+@theme {
+  /*Prioridad para el texto lectura*/
+  --font-sans: "Nunito Variable", system-ui, sans-serif;
+
+  /*Prioridad para el texto destacado*/
+  --font-display: "DynaPuff Variable", "Nunito Variable", system-ui, sans-serif;
+
+  /* Colores */
+  --color-azul: #2440e0;
+  --color-amarillo: #f5c518;
+  --color-tinta: #16161a;
+  --color-texto-secundario: #2e2c36;
+  --color-texto-terciario: #46434f;
+  --color-papel: #f1ece3;
+  --color-blanco: #ffffff;
+  --color-positivo: #1f9d6b;
+  --color-alerta: #d64545;
+  --color-tinta-violeta: #221d3b;
+
+  /* Estilos de texto */
+  --text-titulo-grande-31: 31px;
+  --text-titulo-grande-31--line-height: normal;
+  --text-titulo-grande-31--font-weight: 700;
+  --text-titulo-pantalla-24: 24px;
+  --text-titulo-pantalla-24--line-height: normal;
+  --text-titulo-pantalla-24--font-weight: 700;
+  --text-titulo-cifra-34: 34px;
+  --text-titulo-cifra-34--line-height: normal;
+  --text-titulo-cifra-34--font-weight: 700;
+  --text-titulo-cifra-22: 22px;
+  --text-titulo-cifra-22--line-height: normal;
+  --text-titulo-cifra-22--font-weight: 700;
+  --text-cuerpo-intro-15: 15px;
+  --text-cuerpo-intro-15--line-height: normal;
+  --text-cuerpo-intro-15--font-weight: 500;
+  --text-cuerpo-destacado-15: 15px;
+  --text-cuerpo-destacado-15--line-height: normal;
+  --text-cuerpo-destacado-15--font-weight: 800;
+  --text-cuerpo-destacado-13: 13px;
+  --text-cuerpo-destacado-13--line-height: normal;
+  --text-cuerpo-destacado-13--font-weight: 800;
+  --text-cuerpo-secundario-12-5: 12.5px;
+  --text-cuerpo-secundario-12-5--line-height: normal;
+  --text-cuerpo-secundario-12-5--font-weight: 600;
+  --text-cuerpo-pequeno-11-5: 11.5px;
+  --text-cuerpo-pequeno-11-5--line-height: normal;
+  --text-cuerpo-pequeno-11-5--font-weight: 600;
+  --text-etiqueta-sobretitulo-11-5: 11.5px;
+  --text-etiqueta-sobretitulo-11-5--line-height: normal;
+  --text-etiqueta-sobretitulo-11-5--font-weight: 800;
+  --text-etiqueta-sobretitulo-11-5--letter-spacing: 0.69px;
+  --text-chip-12-5: 12.5px;
+  --text-chip-12-5--line-height: normal;
+  --text-chip-12-5--font-weight: 700;
+  --text-boton-16: 16px;
+  --text-boton-16--line-height: normal;
+  --text-boton-16--font-weight: 800;
+
+  /* Radios */
+  --radius-chip: 15px;
+  --radius-tarjeta-y-campo: 20px;
+  --radius-tarjeta-destacada: 22px;
+  --radius-boton: 27px;
+  --radius-modal: 30px;
+  --radius-barra-de-pestanas: 33px;
+  --radius-hoja: 45px;
+
+  /* Espacios */
+  --spacing-espacio-6: 6px;
+  --spacing-espacio-8: 8px;
+  --spacing-espacio-10: 10px;
+  --spacing-espacio-12: 12px;
+  --spacing-espacio-14: 14px;
+  --spacing-espacio-16: 16px;
+  --spacing-boton-primario: 54px;
+
+  /* Iconos */
+  --trazo-icono: 1.8px;
+
+  /* Sombras */
+  --shadow-cristal-claro:
+    0 1px 2px -1px rgb(12 16 40 / 0.08),
+    0 14px 30px -12px rgb(12 16 40 / 0.16),
+    0 34px 70px -30px rgb(12 16 40 / 0.1);
+  --shadow-cristal-estandar:
+    0 1px 2px -1px rgb(12 16 40 / 0.1),
+    0 14px 30px -12px rgb(12 16 40 / 0.2),
+    0 34px 70px -30px rgb(12 16 40 / 0.13);
+
+  --shadow-elevacion-tarjeta:
+    0 1px 2px rgb(12 16 40 / 0.06),
+    0 12px 26px -10px rgb(12 16 40 / 0.14),
+    0 28px 60px -26px rgb(12 16 40 / 0.1);
+  --shadow-elevacion-boton-amarillo:
+    0 3px 6px -2px rgb(191 133 0 / 0.2),
+    0 14px 30px -10px rgb(191 133 0 / 0.3),
+    0 32px 70px -28px rgb(191 133 0 / 0.16);
+}
+
+@layer base {
+  html { font-family: var(--font-sans); }
+  body {
+    background-color: var(--color-papel);
+    color: var(--color-tinta);
+    -webkit-font-smoothing: antialiased; /*Suaviza el texto para Safari y Chrome macOS*/
+  }
+}
+
+@layer components {
+  /* Cristal: claro, estándar y denso */
+  .cristal-claro,
+  .cristal-estandar,
+  .cristal-denso {
+    border: 1.25px solid rgb(255 255 255 / 0.95);
+    background: linear-gradient(to bottom, var(--relleno-a), var(--relleno-b));
+    -webkit-backdrop-filter: blur(var(--desenfoque));
+    backdrop-filter: blur(var(--desenfoque));
+    box-shadow:
+      var(--sombra),
+      inset 0 1.5px 0 rgb(255 255 255 / 0.9),
+      inset 0 0 0 1px rgb(255 255 255 / 0.35),
+      inset 0 -1.5px 3px rgb(12 16 40 / 0.06);
+  }
+  .cristal-claro {
+    --relleno-a: rgb(255 255 255 / 0.46);
+    --relleno-b: rgb(255 255 255 / 0.28);
+    --desenfoque: 18px;
+    --sombra: var(--shadow-cristal-claro);
+  }
+  .cristal-estandar {
+    --relleno-a: rgb(255 255 255 / 0.6);
+    --relleno-b: rgb(255 255 255 / 0.42);
+    --desenfoque: 20px;
+    --sombra: var(--shadow-cristal-estandar);
+  }
+  .cristal-denso {
+    --relleno-a: rgb(255 255 255 / 0.78);
+    --relleno-b: rgb(255 255 255 / 0.66);
+    --desenfoque: 22px;
+    --sombra: var(--shadow-cristal-estandar);
+  }
+
+  /* Iconos */
+  .icono {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: var(--trazo-icono);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Botón primario */
+  .boton-primario {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--spacing-boton-primario);
+    padding-inline: 1.5rem;
+    border-radius: var(--radius-boton);
+    background-color: var(--color-amarillo);
+    color: var(--color-tinta);
+    font-size: var(--text-boton-16);
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow:
+      var(--shadow-elevacion-boton-amarillo),
+      inset 0 1.5px 0 rgb(255 255 255 / 0.65),
+      inset 0 -2px 3px rgb(150 99 0 / 0.14);
+  }
+}

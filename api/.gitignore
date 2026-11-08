@@ -1,2 +1,6 @@
 # Cliente de Prisma: se genera con `prisma generate` (también al hacer npm install)
 src/generated/
+
+# Variables de entorno: nunca se suben
+.env
+!.env.example

@@ -3,7 +3,8 @@ info:
   title: Society API
   version: 0.1.0
   description: |
-    API propia de Society. El cliente solo hablan con esta API y con Supabase.
+    API propia de Society. Los clientes (app Android y panel web) solo hablan con esta API.
+    Este contrato documenta únicamente nuestras rutas `/api/v1/...`, no las de Google.
 servers:
   - url: /api/v1
 tags:
@@ -14,13 +15,22 @@ paths:
   /places/search:
     get:
       operationId: buscarLugares
-      summary: Buscar negocios por texto
+      summary: Buscar locales por texto
       description: |
-        Busca negocios por texto y devuelve una página de resultados. Alimenta la pantalla 02 «Busca tu local»: Se carga lazy list pidiendo la página siguiente con `pageToken` mientras exista
-        `nextPageToken`.
+        Busca locales por texto y devuelve una página de resultados. Alimenta la pantalla
+        02 «Busca tu local»: la lista se carga de forma lazy, pidiendo la página siguiente
+        con `pageToken` mientras exista `nextPageToken`.
+
+        Cada resultado trae solo los campos de la tarjeta: `placeId`, `nombre`,
+        `direccion`, `valoracion`, `numResenas`, `fotoName` y `googleMapsUri`.
 
         Si la búsqueda no encuentra locales, responde 200 con `resultados` vacío (estado
         «vacío» de la pantalla). Un texto vacío es un 400.
+
+        Internamente la API llama a Google Places (Text Search, `POST /v1/places:searchText`)
+        con un `X-Goog-FieldMask` que limita la respuesta a `id`, `displayName`,
+        `formattedAddress`, `rating`, `userRatingCount`, `photos`, `googleMapsUri` y
+        `nextPageToken`.
 
         La clave de Google solo vive en el servidor (D-05) y nunca llega al cliente.
 
@@ -36,7 +46,6 @@ paths:
           schema:
             type: string
             minLength: 1
-          example: Peluquería X
         - name: pageToken
           in: query
           required: false
@@ -45,7 +54,7 @@ paths:
             type: string
       responses:
         '200':
-          description: Página de resultados
+          description: Página de resultados.
           content:
             application/json:
               schema:
@@ -62,9 +71,15 @@ paths:
   /places/photo:
     get:
       operationId: obtenerFotoLugar
-      summary: Obtener la URL de la foto de un negocio
+      summary: Obtener la URL de la foto de un local y sus atribuciones
       description: |
-        Devuelve la URL de una foto, para pintar las imágenes de la tarjeta de local.
+        Devuelve la URL de una foto para pintar la imagen de la tarjeta de local, junto con
+        los autores de la foto, que hay que mostrar cuando existan.
+
+        Internamente la API llama a Google Places (Place Photos,
+        `GET /v1/{name}/media?skipHttpRedirect=true`).
+
+        La clave de Google solo vive en el servidor (D-05) y nunca llega al cliente.
 
         No se guarda nada: ni la foto ni su URL (D-06).
       tags: [Places]
@@ -74,10 +89,9 @@ paths:
         - name: name
           in: query
           required: true
-          description: Elemento de `fotoNames` de un `LugarRespuesta`.
+          description: Valor de `fotoName` de un resultado de `/places/search`.
           schema:
             type: string
-          example: places/ChIJ.../photos/AUc7...
         - name: maxWidthPx
           in: query
           required: true
@@ -86,10 +100,9 @@ paths:
             type: integer
             minimum: 1
             maximum: 4800
-          example: 400
       responses:
         '200':
-          description: URL de la foto.
+          description: URL de la foto y sus atribuciones.
           content:
             application/json:
               schema:
@@ -103,53 +116,13 @@ paths:
         '503':
           $ref: '#/components/responses/Error503'
 
-  /places/{placeId}:
-    get:
-      operationId: obtenerDetalleLugar
-      summary: Obtener los datos completos de un negocio
-      description: |
-        Devuelve los datos completos del local elegido. Se pide una sola vez, cuando el
-        usuario confirma «Es mi local», con el `placeId` de un resultado de
-        `/places/search` o del clic en el mapa.
-
-        La clave de Google solo vive en el servidor (D-05) y nunca llega al cliente.
-
-        No se guarda nada: ni el `placeId` consultado ni los datos devueltos (D-06).
-      tags: [Places]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: placeId
-          in: path
-          required: true
-          description: Identificador del local (`placeId` de un resultado de búsqueda).
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Datos del negocio.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LugarRespuesta'
-        '400':
-          $ref: '#/components/responses/Error400'
-        '401':
-          $ref: '#/components/responses/Error401'
-        '404':
-          $ref: '#/components/responses/Error404'
-        '429':
-          $ref: '#/components/responses/Error429'
-        '503':
-          $ref: '#/components/responses/Error503'
-
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: JWT de la sesión de Supabase Auth.
+      description: JWT de la sesión (se obtiene con la API de acceso, no directamente de Supabase).
 
   schemas:
     BusquedaRespuesta:
@@ -158,98 +131,69 @@ components:
       properties:
         resultados:
           type: array
+          description: Locales de esta página. Vacío si la búsqueda no encuentra nada.
           items:
             $ref: '#/components/schemas/LugarRespuesta'
         nextPageToken:
           type: string
           description: Ausente cuando no hay más páginas.
 
-    FotoRespuesta:
-      type: object
-      required: [photoUri]
-      properties:
-        photoUri:
-          type: string
-          format: uri
-
     LugarRespuesta:
       type: object
-      description: |
-        Datos de un local. `/places/search` devuelve solo los campos de la tarjeta; `/places/{placeId}` devuelve todos los que tenga el local.
+      description: Campos de la tarjeta de un local en la pantalla 02.
       required: [placeId, nombre]
       properties:
         placeId:
           type: string
+          description: Identificador del local en Google (`id`).
         nombre:
           type: string
-          description: Nombre del local (`displayName`).
-        tipos:
-          type: array
-          description: Categorías del local (`types`).
-          items:
-            type: string
-        estadoNegocio:
-          type: string
-          description: Estado operativo actual (`businessStatus`).
-          enum: [OPERATIONAL, CLOSED_TEMPORARILY, CLOSED_PERMANENTLY]
+          description: Nombre del local (`displayName.text`).
         direccion:
           type: string
           description: Dirección postal (`formattedAddress`).
-        componentesDireccion:
-          type: array
-          description: Dirección desglosada en calle, ciudad, código postal… (`addressComponents`).
-          items:
-            $ref: '#/components/schemas/ComponenteDireccion'
-        ubicacion:
-          $ref: '#/components/schemas/Ubicacion'
-        telefono:
-          type: string
-          description: Teléfono nacional (`nationalPhoneNumber`). Ausente si no consta.
-        web:
-          type: string
-          format: uri
-          description: Web del negocio (`websiteUri`). Ausente si no consta.
-        googleMapsUri:
-          type: string
-          format: uri
         valoracion:
           type: number
           format: float
-          description: Media de reseñas.
+          description: Media de reseñas (`rating`). Ausente si el local no tiene reseñas.
         numResenas:
           type: integer
-          description: Número total de reseñas.
-        resumenEditorial:
+          description: Número total de reseñas (`userRatingCount`).
+        fotoName:
           type: string
-          description: Resumen editorial de Google (`editorialSummary`). Ausente en muchos locales.
-        fotoNames:
-          type: array
-          description: Cada valor se pasa como `name` a `/places/photo`. Ausente si el negocio no tiene fotos.
-          items:
-            type: string
+          description: |
+            Referencia de una foto del local (`photos[].name`). Se pasa como `name` a
+            `/places/photo`. Ausente si el local no tiene fotos.
+        googleMapsUri:
+          type: string
+          format: uri
+          description: Enlace al local en Google Maps.
 
-    ComponenteDireccion:
+    FotoRespuesta:
       type: object
+      required: [photoUri, atribuciones]
+      properties:
+        photoUri:
+          type: string
+          format: uri
+        atribuciones:
+          type: array
+          description: Autores de la foto. Vacío si no constan.
+          items:
+            $ref: '#/components/schemas/Atribucion'
+
+    Atribucion:
+      type: object
+      description: Autor de una foto.
+      required: [nombre]
       properties:
         nombre:
           type: string
-        nombreCorto:
+          description: Nombre del autor.
+        uri:
           type: string
-        tipos:
-          type: array
-          items:
-            type: string
-
-    Ubicacion:
-      type: object
-      required: [latitud, longitud]
-      properties:
-        latitud:
-          type: number
-          format: double
-        longitud:
-          type: number
-          format: double
+          format: uri
+          description: Perfil del autor. Ausente si no consta.
 
     Error:
       type: object
@@ -261,8 +205,13 @@ components:
           properties:
             code:
               type: string
+              description: |
+                Código común de error. Android y la web lo traducen a su error interno.
+                En estas rutas: `VALIDACION`, `SESION_CADUCADA`, `LIMITE_ALCANZADO`
+                y `PROVEEDOR_NO_DISPONIBLE`.
             message:
               type: string
+              description: Mensaje legible. Nunca incluye claves ni respuestas de Google.
             retryable:
               type: boolean
               description: |
@@ -282,12 +231,6 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-    Error404:
-      description: No existe un local con ese `placeId`.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
     Error429:
       description: Demasiadas peticiones.
       content:
@@ -300,8 +243,3 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-          example:
-            error:
-              code: PROVEEDOR_NO_DISPONIBLE
-              message: El proveedor no está disponible
-              retryable: true
