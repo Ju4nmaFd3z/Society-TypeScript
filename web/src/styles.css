@@ -14,7 +14,18 @@
   /*Prioridad para el texto destacado*/
   --font-display: "DynaPuff Variable", "Nunito Variable", system-ui, sans-serif;
 
-  /* Colores */
+  /* Colores de marca (logotipo, vídeo y grafiti) */
+  --color-azul-society: #1033ef;
+  --color-amarillo-society: #f5c518;
+  --color-tinta-marca: #151515;
+  --color-papel-marca: #f2f1ec;
+  --color-papel-calido: #f4f2ec;
+  --color-piedra: #e3e0d8;
+  --color-gris-texto: #6f6b62;
+  /* Solo para el velo de la pared; no se usa en ningún otro sitio */
+  --color-papel-claro: #fbf8f2;
+
+  /* Colores de interfaz */
   --color-azul: #2440e0;
   --color-amarillo: #f5c518;
   --color-tinta: #16161a;
@@ -90,7 +101,7 @@
   --shadow-cristal-claro:
     0 1px 2px -1px rgb(12 16 40 / 0.08),
     0 14px 30px -12px rgb(12 16 40 / 0.16),
-    0 34px 70px -30px rgb(12 16 40 / 0.1);
+    0 34px 70px -30px rgb(12 16 40 / 0.104);
   --shadow-cristal-estandar:
     0 1px 2px -1px rgb(12 16 40 / 0.1),
     0 14px 30px -12px rgb(12 16 40 / 0.2),
@@ -106,6 +117,17 @@
     0 32px 70px -28px rgb(191 133 0 / 0.16);
 }
 
+/*
+ * PROVISIONAL: manchas de color a la espera de la imagen de la pared de grafitis.
+ * Cuando exista, sustituir por: --pared-imagen: url("/pared.webp");
+ */
+:root {
+  --pared-imagen:
+    radial-gradient(circle at 12% 78%, rgb(16 51 239 / 0.55), transparent 38%),
+    radial-gradient(circle at 88% 12%, rgb(245 197 24 / 0.6), transparent 36%),
+    radial-gradient(circle at 70% 85%, rgb(16 51 239 / 0.3), transparent 30%);
+}
+
 @layer base {
   html { font-family: var(--font-sans); }
   body {
@@ -116,11 +138,16 @@
 }
 
 @layer components {
-  /* Cristal: claro, estándar y denso */
+  /*
+   * Cristal: claro, estándar y denso. Cuanto más texto lleva la superficie, más densa.
+   * Filo especular: trazo interior de 1,25 px con degradado vertical (95 % → 28 % → 60 %),
+   * dibujado en ::before con una máscara que deja solo el anillo.
+   * Brillo interior: tres sombras interiores. Sombras exteriores: tres capas (--sombra).
+   */
   .cristal-claro,
   .cristal-estandar,
   .cristal-denso {
-    border: 1.25px solid rgb(255 255 255 / 0.95);
+    position: relative;
     background: linear-gradient(to bottom, var(--relleno-a), var(--relleno-b));
     -webkit-backdrop-filter: blur(var(--desenfoque));
     backdrop-filter: blur(var(--desenfoque));
@@ -129,6 +156,25 @@
       inset 0 1.5px 0 rgb(255 255 255 / 0.9),
       inset 0 0 0 1px rgb(255 255 255 / 0.35),
       inset 0 -1.5px 3px rgb(12 16 40 / 0.06);
+  }
+  .cristal-claro::before,
+  .cristal-estandar::before,
+  .cristal-denso::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.25px;
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      rgb(255 255 255 / 0.95),
+      rgb(255 255 255 / 0.28) 50%,
+      rgb(255 255 255 / 0.6)
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
   }
   .cristal-claro {
     --relleno-a: rgb(255 255 255 / 0.46);
@@ -177,5 +223,101 @@
       var(--shadow-elevacion-boton-amarillo),
       inset 0 1.5px 0 rgb(255 255 255 / 0.65),
       inset 0 -2px 3px rgb(150 99 0 / 0.14);
+  }
+
+  /*
+   * Pared de grafitis con su velo. La imagen se pasa en --pared-imagen.
+   * Velo (#FBF8F2): arriba, degradado de 380 px del 90 % al 42 %; en el resto, 42 % uniforme.
+   * El contenido de un .pared debe llevar `relative` para quedar por encima del velo.
+   */
+  .pared {
+    position: relative;
+    background-color: var(--color-papel-marca);
+    background-image: var(--pared-imagen, none);
+    background-size: cover;
+    background-position: center;
+  }
+  .pared::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(to bottom, rgb(251 248 242 / 0.9), rgb(251 248 242 / 0.42)) 0 0 / 100% 380px no-repeat,
+      linear-gradient(rgb(251 248 242 / 0.42), rgb(251 248 242 / 0.42)) 0 380px / 100% calc(100% - 380px) no-repeat;
+  }
+
+  /* Elemento de la navegación lateral. El activo es un chip activo: azul de interfaz con texto blanco */
+  .item-navegacion {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-espacio-12);
+    padding: var(--spacing-espacio-10) var(--spacing-espacio-12);
+    border-radius: var(--radius-chip);
+    color: var(--color-texto-secundario);
+    font-size: var(--text-cuerpo-destacado-15);
+    font-weight: 800;
+  }
+  .item-navegacion:hover {
+    background-color: rgb(255 255 255 / 0.6);
+  }
+  .item-navegacion.activo,
+  .item-navegacion.activo:hover {
+    background-color: var(--color-azul);
+    color: var(--color-blanco);
+  }
+
+  /*
+   * PROVISIONAL: no es de SOCIETY-34 (los componentes reutilizables son SOCIETY-54).
+   * Botón secundario: se usa junto a .cristal-claro
+   */
+  .boton-secundario {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--spacing-boton-primario);
+    padding-inline: 1.5rem;
+    border-radius: var(--radius-boton);
+    color: var(--color-tinta);
+    font-size: var(--text-boton-16);
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  /*
+   * PROVISIONAL: no es de SOCIETY-34 (los componentes reutilizables son SOCIETY-54).
+   * Chips: .chip-activo (azul, texto blanco) o .chip + .cristal-claro (neutro)
+   */
+  .chip,
+  .chip-activo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-espacio-6);
+    padding: var(--spacing-espacio-6) var(--spacing-espacio-12);
+    border-radius: var(--radius-chip);
+    font-size: var(--text-chip-12-5);
+    font-weight: 700;
+  }
+  .chip {
+    color: var(--color-tinta);
+  }
+  .chip-activo {
+    background-color: var(--color-azul);
+    color: var(--color-blanco);
+  }
+
+  /*
+   * PROVISIONAL: no es de SOCIETY-34 (los componentes reutilizables son SOCIETY-54).
+   * Campo de texto: blanco al 84 %, radio 20 y elevación de tarjeta
+   */
+  .campo-texto {
+    width: 100%;
+    padding: var(--spacing-espacio-12) var(--spacing-espacio-16);
+    border-radius: var(--radius-tarjeta-y-campo);
+    background-color: rgb(255 255 255 / 0.84);
+    box-shadow: var(--shadow-elevacion-tarjeta);
+    color: var(--color-tinta);
+    font-size: var(--text-cuerpo-intro-15);
+    font-weight: 500;
   }
 }

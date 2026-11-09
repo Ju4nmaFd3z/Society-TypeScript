@@ -32,6 +32,6 @@ El resultado se genera en `web/dist/web/browser`.
 El panel usa Tailwind CSS con el tema «papel y cristal» de Figma.
 
 - El tema (colores, tipografías, radios y sombras) está en `src/styles.css`, dentro de `@theme`.
-- Clases base: `.hoja-cristal`, `.tarjeta-cristal` y `.boton-amarillo`.
+- Clases base: `.hoja-cristal`, `.tarjeta-cristal` y `.boton-amarillo`. Nuevas del sistema de diseño: `.cristal-claro`, `.cristal-estandar`, `.cristal-denso`, `.pared`, `.item-navegacion` y `.boton-primario`; provisionales hasta SOCIETY-54: `.boton-secundario`, `.chip-activo`, `.chip` y `.campo-texto`.
 - Las fuentes Nunito y DynaPuff se instalan con npm (`@fontsource-variable`), sin servicios externos.
 
