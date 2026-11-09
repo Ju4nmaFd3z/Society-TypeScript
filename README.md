@@ -12,7 +12,7 @@ Repositorio en desarrollo. Contiene tres partes:
   
 - [`web/`](web/): panel Angular 19 con Tailwind CSS. Hoy tiene el proyecto creado, el tema de cristal y el layout del panel con páginas vacías; las vistas reales llegan en sprints posteriores. Cómo arrancarlo: [web/README.md](web/README.md).
   
-- [`contrato/`](contrato/): `openapi.yaml`, el contrato de la API. Hoy documenta las rutas de Places (`/places/search` y `/places/photo`); faltan `/auth` y `/restaurantes`. Cualquier cambio en la API se hace antes aquí, en una pull request revisada por Android y Angular.
+- [`contrato/`](contrato/): `openapi.yaml`, el contrato de la API. Hoy (v0.2.0) documenta `/salud`, `/auth` (registro, acceso y refresco), `/restaurantes` (alta y consulta del local), `/analisis` y las rutas de Places (`/places/search` y `/places/photo`). El resto se añade a medida que se programa cada parte, hasta completarlo en el sprint 5. Cualquier cambio en la API se hace antes aquí, en una pull request revisada por Android y Angular.
 Para arrancar en local hace falta Node.js (24 o superior para `api/`). Cada parte se arranca desde su carpeta:
  
     cd api

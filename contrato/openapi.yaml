@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Society API
-  version: 0.1.0
+  version: 0.2.0
   description: |
     API propia de Society. Los clientes (app Android y panel web) solo hablan con esta API.
     Este contrato documenta únicamente nuestras rutas `/api/v1/...`, no las de Google.
@@ -10,6 +10,14 @@ servers:
 tags:
   - name: Places
     description: Búsqueda de locales y fotos.
+  - name: Salud
+    description: Comprobar que la API está en marcha.
+  - name: Auth
+    description: Crear cuenta, iniciar sesión y renovar la sesión.
+  - name: Restaurantes
+    description: Alta del local y consulta del local del usuario.
+  - name: Analisis
+    description: Análisis del local (operación larga, se consulta cada 3 s).
 
 paths:
   /places/search:
@@ -116,6 +124,281 @@ paths:
         '503':
           $ref: '#/components/responses/Error503'
 
+  /salud:
+    get:
+      operationId: comprobarSalud
+      summary: Comprobar que la API está en marcha
+      tags: [Salud]
+      security: []
+      responses:
+        '200':
+          description: La API responde.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+
+  /auth/registro:
+    post:
+      operationId: crearCuenta
+      summary: Crear una cuenta
+      description: |
+        Pantalla S01A, pestaña «Crear cuenta». La API crea el usuario en Supabase Auth
+        desde el servidor, sin confirmación de email (D-04), y guarda `perfil_usuario`
+        con la versión y la fecha de aceptación de los términos.
+
+        Devuelve la sesión directamente: el usuario no tiene que iniciar sesión después.
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistroPeticion'
+      responses:
+        '201':
+          description: Cuenta creada. Devuelve la sesión.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sesion'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '409':
+          description: Ese email ya tiene cuenta (`DUPLICADO`). La pantalla cambia a «Iniciar sesión».
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+
+  /auth/acceso:
+    post:
+      operationId: iniciarSesion
+      summary: Iniciar sesión con email y contraseña
+      description: |
+        Pantalla S01A, pestaña «Iniciar sesión». La API llama a Supabase Auth
+        (`signInWithPassword`) desde el servidor y devuelve los tokens.
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccesoPeticion'
+      responses:
+        '200':
+          description: Sesión iniciada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sesion'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          description: Email o contraseña incorrectos (`CREDENCIALES_INCORRECTAS`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+
+  /auth/refresco:
+    post:
+      operationId: renovarSesion
+      summary: Renovar la sesión con el refresh token
+      description: |
+        Se llama cuando el JWT de acceso ha caducado (dura 1 h), por ejemplo en el arranque.
+        Si el refresh token tampoco vale, la respuesta es 401 y el cliente vuelve a S01A.
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefrescoPeticion'
+      responses:
+        '200':
+          description: Sesión renovada. Los dos tokens son nuevos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sesion'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '503':
+          $ref: '#/components/responses/Error503'
+
+  /restaurantes/mio:
+    get:
+      operationId: obtenerMiRestaurante
+      summary: Saber en qué punto del alta está el usuario
+      description: |
+        Arranque y S01A. Con la respuesta, el cliente decide la primera pantalla:
+        `SIN_LOCAL` → S02, `ANALIZANDO` → S03(`analisisEnCursoId`),
+        `PENDIENTE_CONFIRMAR` → S04, `COMPLETADA` → S05.
+      tags: [Restaurantes]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Estado del alta.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MiRestaurante'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '500':
+          $ref: '#/components/responses/Error500'
+
+  /restaurantes:
+    post:
+      operationId: crearRestaurante
+      summary: Dar de alta el local (desde Google o a mano)
+      description: |
+        - S02, `origen: GOOGLE`: la API pide a Google Places (Place Details) los datos
+          básicos y los guarda (D-06). También crea los canales WEB y TELEFONO.
+        - S02M, `origen: MANUAL`: guarda los datos que escribe el usuario y los canales
+          WEB e INSTAGRAM con fuente USUARIO.
+
+        Un local por cuenta (D-13) y un `googlePlaceId` por local: si no se cumple, 409.
+        El local queda en `altaEstado: CREADO`. Después el cliente lanza el análisis.
+      tags: [Restaurantes]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/AltaGooglePeticion'
+                - $ref: '#/components/schemas/AltaManualPeticion'
+              discriminator:
+                propertyName: origen
+                mapping:
+                  GOOGLE: '#/components/schemas/AltaGooglePeticion'
+                  MANUAL: '#/components/schemas/AltaManualPeticion'
+      responses:
+        '201':
+          description: Local creado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestauranteResumen'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '409':
+          description: |
+            `DUPLICADO`: el local ya está dado de alta con otra cuenta, o el usuario ya
+            tiene un local.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          $ref: '#/components/responses/Error503'
+
+  /restaurantes/{id}/analisis:
+    post:
+      operationId: lanzarAnalisis
+      summary: Lanzar el análisis del local
+      description: |
+        S02, S02M y «Reintentar» en S03. Crea `analisis` (EN_COLA) y un trabajo ANALISIS
+        para el worker, y responde enseguida con 202. Si ya hay un análisis en curso,
+        devuelve ese mismo `analisisId`.
+
+        El progreso se consulta con `GET /analisis/{id}`.
+      tags: [Analisis]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdRuta'
+      responses:
+        '202':
+          description: Análisis en cola.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [analisisId]
+                properties:
+                  analisisId:
+                    type: string
+                    format: uuid
+        '401':
+          $ref: '#/components/responses/Error401'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+  /analisis/{id}:
+    get:
+      operationId: obtenerAnalisis
+      summary: Consultar el estado del análisis
+      description: |
+        S03 la llama cada 3 s hasta que el estado es terminal (`COMPLETADO`, `PARCIAL`,
+        `ERROR` o `CANCELADO`). `tiempoRestanteSeg` se calcula con la mediana de los
+        últimos 20 análisis (D-19).
+      tags: [Analisis]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdRuta'
+      responses:
+        '200':
+          description: Estado y pasos del análisis.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Analisis'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+  /analisis/{id}/cancelar:
+    post:
+      operationId: cancelarAnalisis
+      summary: Cancelar el análisis
+      description: |
+        Modal M03 de S03. Marca CANCELADO el análisis y su trabajo; el worker lo comprueba
+        entre pasos. Devuelve el análisis ya cancelado.
+      tags: [Analisis]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdRuta'
+      responses:
+        '200':
+          description: Análisis cancelado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Analisis'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '404':
+          $ref: '#/components/responses/Error404'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -195,6 +478,195 @@ components:
           format: uri
           description: Perfil del autor. Ausente si no consta.
 
+    RegistroPeticion:
+      type: object
+      required: [email, contrasena, terminosVersion]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        contrasena:
+          type: string
+          format: password
+          minLength: 8
+          description: Nunca se guarda en la app ni en los registros.
+        terminosVersion:
+          type: string
+          description: Versión de los términos que ha aceptado (casilla obligatoria).
+          example: '2026-11'
+
+    AccesoPeticion:
+      type: object
+      required: [email, contrasena]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        contrasena:
+          type: string
+          format: password
+          minLength: 8
+
+    RefrescoPeticion:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+
+    Sesion:
+      type: object
+      description: Android la guarda en DataStore y la web en localStorage.
+      required: [accessToken, refreshToken, expiraEn]
+      properties:
+        accessToken:
+          type: string
+          description: 'JWT de acceso. Va en la cabecera `Authorization: Bearer` del resto de rutas.'
+        refreshToken:
+          type: string
+          description: Se usa en `/auth/refresco` cuando caduca el de acceso.
+        expiraEn:
+          type: integer
+          description: Segundos que le quedan al JWT de acceso (3600 = 1 h).
+          example: 3600
+
+    AltaEstado:
+      type: string
+      description: |
+        Punto del alta. `SIN_LOCAL` solo aparece en `/restaurantes/mio`, cuando el
+        usuario aún no tiene local; el resto son los valores de `restaurante.alta_estado`.
+      enum: [SIN_LOCAL, CREADO, ANALIZANDO, PENDIENTE_CONFIRMAR, COMPLETADA]
+
+    RestauranteResumen:
+      type: object
+      required: [id, nombre, origen, altaEstado]
+      properties:
+        id:
+          type: string
+          format: uuid
+        nombre:
+          type: string
+        origen:
+          type: string
+          enum: [GOOGLE, MANUAL]
+        altaEstado:
+          $ref: '#/components/schemas/AltaEstado'
+
+    MiRestaurante:
+      type: object
+      required: [restaurante, altaEstado]
+      properties:
+        restaurante:
+          type: object
+          nullable: true
+          description: '`null` si el usuario aún no tiene local.'
+          allOf:
+            - $ref: '#/components/schemas/RestauranteResumen'
+        altaEstado:
+          $ref: '#/components/schemas/AltaEstado'
+        analisisEnCursoId:
+          type: string
+          format: uuid
+          description: Solo si hay un análisis EN_COLA o EN_CURSO.
+
+    AltaGooglePeticion:
+      type: object
+      description: Alta desde S02, con un resultado de `/places/search`.
+      required: [origen, googlePlaceId, declaraGestor]
+      properties:
+        origen:
+          type: string
+          enum: [GOOGLE]
+        googlePlaceId:
+          type: string
+          description: '`placeId` del resultado elegido.'
+        declaraGestor:
+          type: boolean
+          enum: [true]
+          description: Casilla «Soy propietario o gestor». Tiene que ser `true`.
+
+    AltaManualPeticion:
+      type: object
+      description: Alta a mano desde S02M.
+      required: [origen, nombre, direccion, municipio, tipo, declaraGestor]
+      properties:
+        origen:
+          type: string
+          enum: [MANUAL]
+        nombre:
+          type: string
+          minLength: 2
+          maxLength: 80
+        direccion:
+          type: string
+          minLength: 3
+          maxLength: 120
+        municipio:
+          type: string
+          minLength: 2
+          maxLength: 60
+        tipo:
+          type: string
+          enum: [RESTAURANTE, BAR, CAFETERIA, OTRO]
+        web:
+          type: string
+          format: uri
+          pattern: '^https://'
+          description: Opcional. Tiene que empezar por https://.
+        instagram:
+          type: string
+          pattern: '^[a-z0-9._]{1,30}$'
+          description: Opcional. Usuario de Instagram sin @.
+        declaraGestor:
+          type: boolean
+          enum: [true]
+
+    Analisis:
+      type: object
+      required: [id, estado, pasos]
+      properties:
+        id:
+          type: string
+          format: uuid
+        estado:
+          type: string
+          enum: [EN_COLA, EN_CURSO, COMPLETADO, PARCIAL, ERROR, CANCELADO]
+        pasos:
+          type: array
+          description: Los 5 pasos en orden. El progreso («3 de 5») lo calcula la pantalla.
+          items:
+            $ref: '#/components/schemas/PasoAnalisis'
+        tiempoRestanteSeg:
+          type: integer
+          minimum: 0
+          description: Estimación en segundos. Con 0, la pantalla muestra «Casi listo…».
+        iniciadoEn:
+          type: string
+          format: date-time
+        terminadoEn:
+          type: string
+          format: date-time
+
+    PasoAnalisis:
+      type: object
+      required: [orden, fuente, estado]
+      properties:
+        orden:
+          type: integer
+          minimum: 1
+          maximum: 5
+        fuente:
+          type: string
+          enum: [GOOGLE_MAPS, WEB, INSTAGRAM, COLORES, FICHA_IA]
+        estado:
+          type: string
+          enum: [PENDIENTE, EN_CURSO, HECHO, OMITIDO, ERROR]
+        detalle:
+          type: string
+          example: 312 reseñas en Google
+
     Error:
       type: object
       required: [error]
@@ -207,8 +679,9 @@ components:
               type: string
               description: |
                 Código común de error. Android y la web lo traducen a su error interno.
-                En estas rutas: `VALIDACION`, `SESION_CADUCADA`, `LIMITE_ALCANZADO`
-                y `PROVEEDOR_NO_DISPONIBLE`.
+                Códigos de estas rutas: `VALIDACION`, `SESION_CADUCADA`,
+                `CREDENCIALES_INCORRECTAS`, `NO_ENCONTRADO`, `DUPLICADO`,
+                `LIMITE_ALCANZADO`, `PROVEEDOR_NO_DISPONIBLE` e `INTERNO`.
             message:
               type: string
               description: Mensaje legible. Nunca incluye claves ni respuestas de Google.
@@ -220,7 +693,7 @@ components:
 
   responses:
     Error400:
-      description: Petición incorrecta, por ejemplo texto de búsqueda vacío.
+      description: Datos de entrada no válidos o JSON mal formado (`VALIDACION`).
       content:
         application/json:
           schema:
@@ -243,3 +716,24 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+    Error404:
+      description: No existe el recurso o no es del usuario (`NO_ENCONTRADO`).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Error500:
+      description: Error inesperado de la API (`INTERNO`). No da detalles.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  parameters:
+    IdRuta:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
