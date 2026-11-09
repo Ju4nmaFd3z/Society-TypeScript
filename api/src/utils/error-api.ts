@@ -2,6 +2,7 @@
 // a ErrorSociety (SesionCaducada, NoEncontrado, Duplicado...).
 export type CodigoError =
   | 'SESION_CADUCADA'
+  | 'CREDENCIALES_INCORRECTAS'
   | 'NO_ENCONTRADO'
   | 'DUPLICADO'
   | 'VALIDACION'
