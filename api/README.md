@@ -35,7 +35,7 @@ cp .env.example .env   # y rellena los valores (pídelos al equipo)
 npm run dev
 ```
 
-Comprueba que responde: <http://localhost:3000/api/v1/salud> → `{"ok":true}`.
+Comprueba que responde: <https://society-api-xi.vercel.app/api/v1/salud> → `{"ok":true}`.
 
 | Script | Para qué |
 |---|---|
