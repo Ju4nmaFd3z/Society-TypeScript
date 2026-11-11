@@ -19,6 +19,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
+    "@supabase/supabase-js": "^2.119.0",
     "express": "^5.3.0"
   },
   "devDependencies": {

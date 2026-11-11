@@ -9,7 +9,8 @@ export type CodigoError =
   | 'LIMITE_ALCANZADO'
   | 'PROVEEDOR_NO_DISPONIBLE'
   | 'MODERACION'
-  | 'INTERNO';
+  | 'INTERNO'
+  | 'PROVEEDOR_NO_DISPONIBLE';
 
 // Error "esperado" que lanzamos nosotros desde servicios o controladores,
 // por ejemplo: throw new ErrorApi(404, 'NO_ENCONTRADO', 'No existe ese local').
