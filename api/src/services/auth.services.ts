@@ -6,7 +6,7 @@ import { prisma } from "../db/prisma.js";
 export interface Sesion {
     access_token: string;
     refresh_token: string;
-    expiracion: number;
+    expiraEn: number;
 }
 
 // Registro, crea el usuario en Supabase Auth
@@ -74,6 +74,6 @@ export async function iniciarSesion(email: string, contrasena: string): Promise<
     return {
         access_token: data.session.access_token,
         refresh_token: data.session.refresh_token,
-        expiracion: data.session.expires_in
+        expiraEn: data.session.expires_in
     };
 }
