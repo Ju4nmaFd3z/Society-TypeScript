@@ -8,7 +8,7 @@ Forma parte del proyecto Society. La documentación de producto, diseño y marca
 
 Repositorio en desarrollo. Contiene tres partes:
  
-- [`api/`](api/): backend compartido con Express 5, TypeScript y Prisma sobre Supabase. Lo usan la app Android y el panel web, y también alojará el worker de trabajos largos (todavía por hacer). Hoy tiene las rutas, controladores y servicios base, el formato de error común, la primera migración (`perfil_usuario` y `restaurante`) y `/api/v1/salud` desplegado en Vercel. Cómo arrancarla y desplegarla: [api/README.md](api/README.md).
+- [`api/`](api/): backend compartido con Express 5, TypeScript y Prisma sobre Supabase. Lo usan la app Android y el panel web, y también alojará el worker de trabajos largos (todavía por hacer). Hoy tiene las rutas, controladores y servicios base, el formato de error común, la primera migración (`perfil_usuario` y `restaurante`), `/api/v1/salud` desplegado en Vercel y el registro de cuentas con Supabase Auth (`POST /api/v1/auth/registro`). Cómo arrancarla y desplegarla: [api/README.md](api/README.md).
   
 - [`web/`](web/): panel Angular 19 con Tailwind CSS. Hoy tiene el proyecto creado, el tema de cristal y el layout del panel con páginas vacías; las vistas reales llegan en sprints posteriores. Cómo arrancarlo: [web/README.md](web/README.md).
   
