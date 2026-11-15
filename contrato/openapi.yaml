@@ -30,7 +30,7 @@ paths:
         con `pageToken` mientras exista `nextPageToken`.
 
         Cada resultado trae solo los campos de la tarjeta: `placeId`, `nombre`,
-        `direccion`, `valoracion`, `numResenas`, `fotoName` y `googleMapsUri`.
+        `direccion`, `valoracion`, `numResenas`, `fotoNames` y `googleMapsUri`.
 
         Si la búsqueda no encuentra locales, responde 200 con `resultados` vacío (estado
         «vacío» de la pantalla). Un texto vacío es un 400.
@@ -97,7 +97,7 @@ paths:
         - name: name
           in: query
           required: true
-          description: Valor de `fotoName` de un resultado de `/places/search`.
+          description: Uno de los valores de `fotoNames` de un resultado de `/places/search`.
           schema:
             type: string
         - name: maxWidthPx
@@ -442,11 +442,15 @@ components:
         numResenas:
           type: integer
           description: Número total de reseñas (`userRatingCount`).
-        fotoName:
-          type: string
+        fotoNames:
+          type: array
+          maxItems: 5
+          items:
+            type: string
           description: |
-            Referencia de una foto del local (`photos[].name`). Se pasa como `name` a
-            `/places/photo`. Ausente si el local no tiene fotos.
+            Referencias de hasta 5 fotos del local (`photos[].name`), para el carrusel de la
+            tarjeta. No son URLs: cada una se pasa como `name` a `/places/photo`, que devuelve
+            la imagen y su autor. Puede traer menos de 5. Ausente si el local no tiene fotos.
         googleMapsUri:
           type: string
           format: uri
