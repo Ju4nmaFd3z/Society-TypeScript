@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { resgistrar } from '../services/auth.services.js';
+import { registrar } from '../services/auth.services.js';
 import { ErrorApi } from '../utils/error-api.js';
 
 // Post auth/registro
@@ -22,7 +22,7 @@ export async function crearCuenta(req: Request, res: Response) {
         throw new ErrorApi(400, 'VALIDACION', 'Hay que aceptar los términos');
     }
 
-    const sesion = await resgistrar(email.trim().toLowerCase(), contrasena, terminosVersion);
+    const sesion = await registrar(email.trim().toLowerCase(), contrasena, terminosVersion);
     res.status(201).json(sesion);
 
-    }
+}
