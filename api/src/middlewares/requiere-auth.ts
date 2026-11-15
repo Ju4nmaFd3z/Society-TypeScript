@@ -11,12 +11,12 @@ export async function requiereAuth(req: Request, _res: Response, next: NextFunct
     if (!cabecera?.startsWith('Bearer ')) {
          throw new ErrorApi(401, 'SESION_CADUCADA', 'Sesión caducada o no válida');
     }
-    // Supabase no responde: no es culpa del token, que el cliente reintente
 
     const token = cabecera.slice(7).trim(); // Se quita 'Bearer '
 
     const { data, error } = await supabase.auth.getUser(token); // validacion con Supabase
 
+    // Supabase no responde: no es culpa del token, que el cliente reintente
     if (isAuthRetryableFetchError(error)) {
         throw new ErrorApi(503, 'PROVEEDOR_NO_DISPONIBLE', 'No se pudo comprobar la sesión. Inténtalo de nuevo.', true);
     }
