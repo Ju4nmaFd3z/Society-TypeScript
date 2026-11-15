@@ -11,10 +11,22 @@ src/
 ├── routes/           asocia cada método y camino con su controlador
 ├── controllers/      traduce entre HTTP y los servicios (lee req, responde con res)
 ├── services/         lógica de negocio, sin nada de Express
-├── db/               conexión de Prisma compartida por toda la API
-├── middlewares/      404 y manejador de errores
+├── db/               conexión de Prisma y cliente de Supabase Auth, compartidos por toda la API
+├── middlewares/      404, manejador de errores y requiereAuth (protege las rutas privadas)
+├── types/            amplía la Request de Express con userId
 └── utils/            ErrorApi y códigos de error comunes
 ```
+
+## Rutas hechas
+
+| Ruta | Acceso | Qué hace |
+|---|---|---|
+| `GET /salud` | pública | `{ok: true}` |
+| `POST /auth/registro` | pública | crea el usuario en Supabase Auth (ya confirmado) y su `perfil_usuario`. Devuelve la sesión |
+| `POST /auth/acceso` | pública | inicia sesión y devuelve `{accessToken, refreshToken, expiraEn}` |
+| `GET /places/search?q=` | con token | busca en Google Places y devuelve `{resultados}`, cada uno con hasta 5 `fotoNames` |
+
+Las rutas privadas llevan `requiereAuth` delante del controlador. Exige la cabecera `Authorization: Bearer <accessToken>`, la valida con Supabase y deja el id del usuario en `req.userId`. Sin token o con uno no válido responde 401 `SESION_CADUCADA`. El detalle de cada ruta está en el [contrato](../contrato/openapi.yaml).
 
 Una petición recorre: `routes` → `controllers` → `services`. Si algo falla, el error llega a `middlewares/errores.ts`, que responde siempre con el mismo formato:
 
