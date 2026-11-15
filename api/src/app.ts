@@ -1,4 +1,7 @@
 import express from 'express';
+// Amplía la Request de Express con userId. Se importa aquí para que Vercel,
+// que solo compila lo que cuelga de app.ts, también lo vea.
+import './types/express.js';
 import rutasV1 from './routes/index.js';
 import { manejadorErrores, rutaNoEncontrada } from './middlewares/errores.js';
 
