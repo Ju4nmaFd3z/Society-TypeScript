@@ -25,6 +25,7 @@ src/
 | `POST /auth/registro` | pública | crea el usuario en Supabase Auth (ya confirmado) y su `perfil_usuario`. Devuelve la sesión |
 | `POST /auth/acceso` | pública | inicia sesión y devuelve `{accessToken, refreshToken, expiraEn}` |
 | `GET /places/search?q=` | con token | busca en Google Places y devuelve `{resultados}`, cada uno con hasta 5 `fotoNames` |
+| `POST /auth/refresco` | pública | con `{refreshToken}` devuelve dos tokens nuevos. El usado deja de valer. 401 `SESION_CADUCADA` si no vale |
 
 Las rutas privadas llevan `requiereAuth` delante del controlador. Exige la cabecera `Authorization: Bearer <accessToken>`, la valida con Supabase y deja el id del usuario en `req.userId`. Sin token o con uno no válido responde 401 `SESION_CADUCADA`. El detalle de cada ruta está en el [contrato](../contrato/openapi.yaml).
 
