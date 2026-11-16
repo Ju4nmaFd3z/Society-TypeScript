@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
-import { registrar, iniciarSesion } from '../services/auth.services.js';
+import { renovarSesion, registrar, iniciarSesion } from '../services/auth.services.js';
 import { ErrorApi } from '../utils/error-api.js';
+import { ref } from 'process';
 
 // Post auth/registro
 // Body {email, contrasena, terminosVersion}
@@ -23,6 +24,7 @@ export async function crearCuenta(req: Request, res: Response) {
 
 }
 
+// login
 export async function acceder(req: Request, res: Response) {
     const { email, contrasena } = req.body ?? {};
 
@@ -40,4 +42,15 @@ function manejoDeErroresComunes(email: any, contrasena: any) {
     if (typeof contrasena !== 'string' || contrasena.length < 8) {
         throw new ErrorApi(400, 'VALIDACION', 'La contraseña debe tener al menos 8 caracteres');
     }
+}
+
+export async function renovar(req: Request, res: Response) {
+    const { refreshToken } = req.body ?? {};
+
+    if (typeof refreshToken !== 'string' || refreshToken.trim() === '') {
+        throw new ErrorApi(400, 'VALIDACION', 'Falta el refreshToken')
+    }
+
+    const sesion = await renovarSesion(refreshToken);
+    res.status(200).json(sesion);
 }

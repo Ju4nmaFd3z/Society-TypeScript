@@ -1,12 +1,22 @@
 import { supabase, crearClienteDeSesion } from "../db/supabase.js";
 import { ErrorApi } from "../utils/error-api.js";
 import { prisma } from "../db/prisma.js";
+import { isAuthRetryableFetchError, type Session } from "@supabase/supabase-js";
 
 // Que devuelve la API en inicio de sesión o registro.
 export interface Sesion {
     accessToken: string;
     refreshToken: string;
     expiraEn: number;
+}
+
+// Traduce la sesión de Supabase a la del contrato (devuelve snake case y lo convertimos a camelCase)
+function aSesion(s: Session): Sesion {
+    return {
+        accessToken: s.access_token,
+        refreshToken: s.refresh_token,
+        expiraEn: s.expires_in,
+    };
 }
 
 // Registro, crea el usuario en Supabase Auth
@@ -81,9 +91,27 @@ export async function iniciarSesion(email: string, contrasena: string): Promise<
         throw new ErrorApi(503, 'PROVEEDOR_NO_DISPONIBLE', 'Proveedor no disponible. No se pudo iniciar sesión.', true)
     
     }
-    return {
-        accessToken: data.session.access_token,
-        refreshToken: data.session.refresh_token,
-        expiraEn: data.session.expires_in
-    };
+    return aSesion(data.session);
+}
+
+// Renovar sesion con refresh token
+export async function renovarSesion(refreshToken: string): Promise<Sesion> {
+
+    // un cliente por peticion
+    const cliente = crearClienteDeSesion();
+
+    // pedir nueva sesion a Supabase
+    const { data, error } = await cliente.auth.refreshSession({refresh_token: refreshToken});
+
+    if (isAuthRetryableFetchError(error)) {
+        throw new ErrorApi(503, 'PROVEEDOR_NO_DISPONIBLE', 'No se pudo renovar la sesión. Inténtalo de nuevo', true);
+    }
+
+    // token caducado
+    if (error || !data.session) {
+        throw new ErrorApi(401, 'SESION_CADUCADA', 'Sesión caducada o no válida');
+    }
+
+    // devolver la sesion nueva con el nuevo el formato establecido
+    return aSesion(data.session);
 }
