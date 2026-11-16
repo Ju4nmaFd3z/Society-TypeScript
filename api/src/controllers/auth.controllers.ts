@@ -47,7 +47,7 @@ function manejoDeErroresComunes(email: any, contrasena: any) {
 export async function renovar(req: Request, res: Response) {
     const { refreshToken } = req.body ?? {};
 
-    if (refreshToken !== 'string' || refreshToken.trim() === '') {
+    if (typeof refreshToken !== 'string' || refreshToken.trim() === '') {
         throw new ErrorApi(400, 'VALIDACION', 'Falta el refreshToken')
     }
 
