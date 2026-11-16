@@ -104,7 +104,7 @@ export async function renovarSesion(refreshToken: string): Promise<Sesion> {
     const { data, error } = await cliente.auth.refreshSession({refresh_token: refreshToken});
 
     if (isAuthRetryableFetchError(error)) {
-        throw new ErrorApi(503, 'PROVEEDOR_NO_DISPONIBLE', 'No se pudo renovar la sesion. Inténtalo de nuevo', true);
+        throw new ErrorApi(503, 'PROVEEDOR_NO_DISPONIBLE', 'No se pudo renovar la sesión. Inténtalo de nuevo', true);
     }
 
     // token caducado
