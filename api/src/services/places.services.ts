@@ -57,6 +57,19 @@ const CAMPOS = [
 ].join(',');
 
 
+// Si Google responde con error, lo traducimos a nuestros códigos comunes.
+// 429 = cuota agotada; cualquier otro fallo = proveedor caído.
+async function lanzarSiError(respuesta: Response): Promise<void> {
+    if (respuesta.ok) return;
+
+    console.error('Google Places respondió', respuesta.status, await respuesta.text());
+
+    if (respuesta.status === 429) {
+        throw new ErrorApi(429, 'LIMITE_ALCANZADO', 'Demasiadas búsquedas. Prueba en unos minutos.', true);
+    }
+    throw new ErrorApi(503, 'PROVEEDOR_NO_DISPONIBLE', 'No se pudo buscar en Google. Inténtalo de nuevo.', true);
+}
+
 export async function buscarLugares(q: string, pageToken?: string): Promise<PaginaLugares> {
 
     // Llamada a Google (google pide POST)
@@ -75,10 +88,7 @@ export async function buscarLugares(q: string, pageToken?: string): Promise<Pagi
         })
     })
 
-    if (!respuesta.ok) {
-        console.error('Google Places respondió', respuesta.status, await respuesta.text());
-        throw new ErrorApi(503, 'PROVEEDOR_NO_DISPONIBLE', 'No se pudo buscar en Google. Inténtalo de nuevo.', true);
-    }
+    await lanzarSiError(respuesta);
 
     // Leer la respuesta, si no hay resultados Google no manda places
     const datos = await respuesta.json() as { places?: LugarGoogle[]; nextPageToken?: string };
