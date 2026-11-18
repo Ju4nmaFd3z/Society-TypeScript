@@ -24,7 +24,8 @@ src/
 | `GET /salud` | pública | `{ok: true}` |
 | `POST /auth/registro` | pública | crea el usuario en Supabase Auth (ya confirmado) y su `perfil_usuario`. Devuelve la sesión |
 | `POST /auth/acceso` | pública | inicia sesión y devuelve `{accessToken, refreshToken, expiraEn}` |
-| `GET /places/search?q=` | con token | busca en Google Places y devuelve `{resultados}`, cada uno con hasta 5 `fotoNames` |
+| `GET /places/search?q=&pageToken=` | con token | busca en Google Places y devuelve `{resultados, nextPageToken?}`, cada resultado con hasta 5 `fotoNames`. La página siguiente se pide con `pageToken`. 429 `LIMITE_ALCANZADO` si Google agota la cuota |
+| `GET /places/photo?name=&maxWidthPx=` | con token | recibe un `fotoName` y devuelve `{photoUri, atribuciones}`. 400 si `name` o `maxWidthPx` no son válidos, 404 si la foto no existe |
 | `POST /auth/refresco` | pública | con `{refreshToken}` devuelve dos tokens nuevos. El usado deja de valer. 401 `SESION_CADUCADA` si no vale |
 
 Las rutas privadas llevan `requiereAuth` delante del controlador. Exige la cabecera `Authorization: Bearer <accessToken>`, la valida con Supabase y deja el id del usuario en `req.userId`. Sin token o con uno no válido responde 401 `SESION_CADUCADA`. El detalle de cada ruta está en el [contrato](../contrato/openapi.yaml).
