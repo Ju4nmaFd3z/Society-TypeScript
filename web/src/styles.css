@@ -268,8 +268,7 @@
   }
 
   /*
-   * PROVISIONAL: no es de SOCIETY-34 (los componentes reutilizables son SOCIETY-54).
-   * Botón secundario: se usa junto a .cristal-claro
+   * Botón secundario: se usa junto a .cristal-claro. Lo usa `appBoton` (shared/ui).
    */
   .boton-secundario {
     display: inline-flex;
@@ -285,8 +284,7 @@
   }
 
   /*
-   * PROVISIONAL: no es de SOCIETY-34 (los componentes reutilizables son SOCIETY-54).
-   * Chips: .chip-activo (azul, texto blanco) o .chip + .cristal-claro (neutro)
+   * Chips: .chip-activo (azul, texto blanco) o .chip + .cristal-claro (neutro). Los usa `app-chip` (shared/ui).
    */
   .chip,
   .chip-activo {
@@ -307,8 +305,7 @@
   }
 
   /*
-   * PROVISIONAL: no es de SOCIETY-34 (los componentes reutilizables son SOCIETY-54).
-   * Campo de texto: blanco al 84 %, radio 20 y elevación de tarjeta
+   * Campo de texto: blanco al 84 %, radio 20 y elevación de tarjeta. Lo usa `app-campo-cristal` (shared/ui).
    */
   .campo-texto {
     width: 100%;

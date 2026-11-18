@@ -1,0 +1,88 @@
+<div class="pared min-h-screen p-espacio-16">
+  <div class="relative mx-auto flex max-w-3xl flex-col gap-espacio-16">
+    <header>
+      <h1 class="font-display text-titulo-grande-31 text-tinta">Catálogo de componentes</h1>
+      <p class="mt-espacio-6 text-cuerpo-intro-15 text-texto-secundario">
+        Componentes reutilizables de <code>shared/ui</code>. Guía de estilos: <code>docs/diseno/sistema-de-diseno.md</code>.
+      </p>
+    </header>
+
+    <app-tarjeta-cristal densidad="denso">
+      <h2 class="font-display text-titulo-cifra-22 text-tinta">Botones</h2>
+      <div class="mt-espacio-12 flex flex-wrap gap-espacio-12">
+        <button appBoton type="button">Continuar</button>
+        <button appBoton variante="secundario" type="button">Cancelar</button>
+      </div>
+    </app-tarjeta-cristal>
+
+    <app-tarjeta-cristal densidad="denso">
+      <h2 class="font-display text-titulo-cifra-22 text-tinta">Campos y casilla</h2>
+      <div class="mt-espacio-12 flex flex-col gap-espacio-14">
+        <app-campo-cristal etiqueta="Nombre del local" marcador="Bar El Boquerón Dorado" ayuda="Como aparece en Google." [formControl]="campo" />
+        <app-campo-cristal etiqueta="Correo electrónico" tipo="email" error="Escribe un correo válido." [formControl]="campoConError" />
+        <app-casilla [formControl]="casilla">Soy propietario o gestor</app-casilla>
+      </div>
+    </app-tarjeta-cristal>
+
+    <app-tarjeta-cristal densidad="denso">
+      <h2 class="font-display text-titulo-cifra-22 text-tinta">Chips</h2>
+      <div class="mt-espacio-12 flex flex-wrap gap-espacio-8">
+        <app-chip [(activo)]="chipActivo">Activo</app-chip>
+        <app-chip [(activo)]="chipNeutro">Neutro</app-chip>
+      </div>
+    </app-tarjeta-cristal>
+
+    <app-tarjeta-cristal densidad="denso">
+      <h2 class="font-display text-titulo-cifra-22 text-tinta">Etiquetas</h2>
+      <p class="mt-espacio-12 text-etiqueta-sobretitulo-11-5 uppercase text-texto-terciario">Origen</p>
+      <div class="mt-espacio-6 flex flex-wrap gap-espacio-16">
+        @for (origen of origenes; track origen) {
+          <app-etiqueta-origen [origen]="origen" />
+        }
+      </div>
+      <p class="mt-espacio-12 text-etiqueta-sobretitulo-11-5 uppercase text-texto-terciario">Confianza</p>
+      <div class="mt-espacio-6 flex flex-wrap gap-espacio-16">
+        @for (confianza of confianzas; track confianza) {
+          <app-etiqueta-confianza [confianza]="confianza" />
+        }
+      </div>
+      <p class="mt-espacio-12 text-etiqueta-sobretitulo-11-5 uppercase text-texto-terciario">Estado</p>
+      <div class="mt-espacio-6 flex flex-wrap gap-espacio-16">
+        @for (estado of estados; track estado) {
+          <app-etiqueta-estado [estado]="estado" />
+        }
+      </div>
+    </app-tarjeta-cristal>
+
+    <div class="grid gap-espacio-16 sm:grid-cols-3">
+      <app-tarjeta-cristal densidad="claro">
+        <p class="text-cuerpo-destacado-13 text-tinta">Cristal claro</p>
+        <p class="mt-espacio-6 text-cuerpo-secundario-12-5 text-texto-secundario">Hojas y controles flotantes.</p>
+      </app-tarjeta-cristal>
+      <app-tarjeta-cristal densidad="estandar">
+        <p class="text-cuerpo-destacado-13 text-tinta">Cristal estándar</p>
+        <p class="mt-espacio-6 text-cuerpo-secundario-12-5 text-texto-secundario">Tarjetas sueltas sobre el fondo.</p>
+      </app-tarjeta-cristal>
+      <app-tarjeta-cristal densidad="denso" [destacada]="true">
+        <p class="text-cuerpo-destacado-13 text-tinta">Cristal denso, destacada</p>
+        <p class="mt-espacio-6 text-cuerpo-secundario-12-5 text-texto-secundario">Modales y mucho texto.</p>
+      </app-tarjeta-cristal>
+    </div>
+
+    <app-tarjeta-cristal densidad="denso">
+      <h2 class="font-display text-titulo-cifra-22 text-tinta">Cargando</h2>
+      <div class="mt-espacio-12"><app-estado-cargando [lineas]="3" /></div>
+    </app-tarjeta-cristal>
+
+    <app-tarjeta-cristal densidad="denso">
+      <app-estado-vacio titulo="Aún no hay piezas este mes" mensaje="Crea tu primera pieza de contenido.">
+        <button appBoton type="button">Crear contenido</button>
+      </app-estado-vacio>
+    </app-tarjeta-cristal>
+
+    <app-tarjeta-cristal densidad="denso">
+      <app-estado-error (reintentar)="reintentos.set(reintentos() + 1)" />
+      <p class="text-center text-cuerpo-pequeno-11-5 text-texto-terciario">Reintentos pulsados: {{ reintentos() }}</p>
+    </app-tarjeta-cristal>
+  </div>
+</div>

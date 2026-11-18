@@ -8,6 +8,11 @@ const paginaVacia = () =>
 // El router definitivo, con guards y redirecciones de sesión, es SOCIETY-55.
 export const routes: Routes = [
   {
+    // Catálogo de componentes reutilizables (SOCIETY-54). Público, solo para desarrollo y revisión.
+    path: 'catalogo',
+    loadComponent: () => import('./features/catalogo/catalogo.component').then((m) => m.CatalogoComponent),
+  },
+  {
     path: '',
     component: PanelLayoutComponent,
     children: [
