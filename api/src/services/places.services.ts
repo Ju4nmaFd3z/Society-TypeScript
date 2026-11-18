@@ -107,3 +107,44 @@ export async function buscarLugares(q: string, pageToken?: string): Promise<Pagi
         nextPageToken: datos.nextPageToken,
     };
 }
+
+export async function obtenerFoto(name: string, maxWidthPx: number): Promise<Foto> {
+    const clave = process.env.GOOGLE_PLACES_API_KEY!;
+    // name tiene la forma "places/{placeId}/photos/{fotoId}": el placeId es el 2º trozo
+    const placeId = name.split('/')[1];
+
+    // Las dos llamadas no dependen una de otra, así que van a la vez
+    const [media, detalle] = await Promise.all([
+        // skipHttpRedirect=true hace que Google devuelva un JSON con la URL en vez de redirigir a la imagen
+        fetch(`${URL_BASE}/${name}/media?maxWidthPx=${maxWidthPx}&skipHttpRedirect=true`, {
+            headers: { 'X-Goog-Api-Key': clave },
+        }),
+        // Los autores no vienen en /media: hay que pedirlos en los datos del lugar
+        fetch(`${URL_BASE}/places/${placeId}`, {
+            headers: {
+                'X-Goog-Api-Key': clave,
+                'X-Goog-FieldMask': 'photos.name,photos.authorAttributions',
+            },
+        }),
+    ]);
+
+    // Un name que Google no reconoce no es un fallo del proveedor: esa foto no existe
+    if (media.status === 400 || media.status === 404) {
+        throw new ErrorApi(404, 'NO_ENCONTRADO', 'No existe esa foto');
+    }
+    await lanzarSiError(media);
+
+    const { photoUri } = await media.json() as { photoUri: string };
+
+    // Si no podemos obtener los autores, la foto se muestra igual con atribuciones vacías
+    let atribuciones: Atribucion[] = [];
+    if (detalle.ok) {
+        const datos = await detalle.json() as {
+            photos?: { name: string; authorAttributions?: { displayName: string; uri?: string }[] }[];
+        };
+        const foto = datos.photos?.find((f) => f.name === name);
+        atribuciones = (foto?.authorAttributions ?? []).map((a) => ({ nombre: a.displayName, uri: a.uri }));
+    }
+
+    return { photoUri, atribuciones };
+}

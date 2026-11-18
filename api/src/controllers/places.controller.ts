@@ -1,6 +1,10 @@
 import type { Request, Response } from 'express';
-import { buscarLugares } from '../services/places.services.js';
+import { buscarLugares, obtenerFoto } from '../services/places.services.js';
 import { ErrorApi } from '../utils/error-api.js';
+
+// Un name válido es "places/{placeId}/photos/{fotoId}". Se valida con esta forma exacta
+// porque el valor se pega dentro de la URL que llamamos a Google, con nuestra clave.
+const FORMATO_NAME = /^places\/[^/]+\/photos\/[^/]+$/;
 
 // GET /places/search?q=&pageToken=
 // Ruta protegida: requiereAuth ya ha comprobado el token antes de llegar aquí.
@@ -18,4 +22,21 @@ export async function buscar(req: Request, res: Response) {
 
     const pagina = await buscarLugares(q.trim(), pageToken);
     res.status(200).json(pagina);
+}
+
+// GET /places/photo?name=&maxWidthPx=
+export async function foto(req: Request, res: Response) {
+    const { name, maxWidthPx } = req.query;
+
+    if (typeof name !== 'string' || !FORMATO_NAME.test(name)) {
+        throw new ErrorApi(400, 'VALIDACION', 'name no es válido');
+    }
+
+    // La query siempre llega como texto: se convierte a número y se comprueba el rango del contrato (1–4800)
+    const ancho = typeof maxWidthPx === 'string' ? Number(maxWidthPx) : NaN;
+    if (!Number.isInteger(ancho) || ancho < 1 || ancho > 4800) {
+        throw new ErrorApi(400, 'VALIDACION', 'maxWidthPx debe ser un entero entre 1 y 4800');
+    }
+
+    res.status(200).json(await obtenerFoto(name, ancho));
 }
