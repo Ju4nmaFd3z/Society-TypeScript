@@ -1,31 +1,31 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
-export type Confianza = 'observado' | 'estimado' | 'hipotesis';
-
-const NIVELES: Record<Confianza, { palabra: string; barras: number }> = {
-  observado: { palabra: 'Observado', barras: 3 },
-  estimado: { palabra: 'Estimado', barras: 2 },
-  hipotesis: { palabra: 'Hipótesis', barras: 1 },
-};
-
-/** Etiqueta de confianza: medidor de tres barras (tres, dos o una rellenas) y la palabra. */
+// Etiqueta de confianza: tres barras (3, 2 o 1 rellenas) y la palabra
 @Component({
   selector: 'app-etiqueta-confianza',
   template: `
-    <span class="flex items-end gap-0.5" aria-hidden="true">
-      @for (barra of [1, 2, 3]; track barra) {
-        <span
-          class="w-1 rounded-sm"
-          [class]="barra <= nivel().barras ? 'bg-tinta' : 'bg-tinta/20'"
-          [style.height.px]="4 + barra * 3"
-        ></span>
-      }
+    <span class="inline-flex items-center gap-espacio-6 text-cuerpo-pequeno-11-5 text-texto-terciario">
+      <span class="flex items-end gap-0.5">
+        <span class="h-2 w-1 rounded-sm" [class]="barras >= 1 ? 'bg-tinta' : 'bg-tinta/20'"></span>
+        <span class="h-2.5 w-1 rounded-sm" [class]="barras >= 2 ? 'bg-tinta' : 'bg-tinta/20'"></span>
+        <span class="h-3 w-1 rounded-sm" [class]="barras >= 3 ? 'bg-tinta' : 'bg-tinta/20'"></span>
+      </span>
+      {{ palabra }}
     </span>
-    <span>{{ nivel().palabra }}</span>
   `,
-  host: { class: 'inline-flex items-center gap-espacio-6 text-cuerpo-pequeno-11-5 text-texto-terciario' },
 })
 export class EtiquetaConfianzaComponent {
-  readonly confianza = input.required<Confianza>();
-  protected readonly nivel = computed(() => NIVELES[this.confianza()]);
+  @Input() confianza: 'observado' | 'estimado' | 'hipotesis' = 'observado';
+
+  get barras(): number {
+    if (this.confianza === 'observado') return 3;
+    if (this.confianza === 'estimado') return 2;
+    return 1;
+  }
+
+  get palabra(): string {
+    if (this.confianza === 'observado') return 'Observado';
+    if (this.confianza === 'estimado') return 'Estimado';
+    return 'Hipótesis';
+  }
 }

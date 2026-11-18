@@ -1,23 +1,20 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
-export type DensidadCristal = 'claro' | 'estandar' | 'denso';
-
-/**
- * Tarjeta de cristal. Cuanto más texto lleva, más densa debe ser.
- * `destacada` usa el radio de 22 px de las tarjetas destacadas.
- */
+// Tarjeta de cristal: cuanto más texto lleva, más densa
 @Component({
   selector: 'app-tarjeta-cristal',
-  template: '<ng-content />',
-  host: { '[class]': 'clases()' },
+  template: `
+    <div [class]="clases">
+      <ng-content></ng-content>
+    </div>
+  `,
 })
 export class TarjetaCristalComponent {
-  readonly densidad = input<DensidadCristal>('estandar');
-  readonly destacada = input(false);
+  @Input() densidad: 'claro' | 'estandar' | 'denso' = 'estandar';
+  @Input() destacada = false;
 
-  protected readonly clases = computed(
-    () =>
-      `block cristal-${this.densidad()} p-espacio-16 ` +
-      (this.destacada() ? 'rounded-tarjeta-destacada' : 'rounded-tarjeta-y-campo'),
-  );
+  get clases(): string {
+    const radio = this.destacada ? 'rounded-tarjeta-destacada' : 'rounded-tarjeta-y-campo';
+    return 'cristal-' + this.densidad + ' p-espacio-16 ' + radio;
+  }
 }
