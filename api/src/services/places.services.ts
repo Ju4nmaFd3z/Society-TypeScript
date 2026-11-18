@@ -11,6 +11,21 @@ export interface Lugar {
     googleMapsUri?: string;
 }
 
+export interface PaginaLugares {
+    resultados: Lugar[];
+    nextPageToken?: string; // ausente cuando no hay más páginas
+}
+
+export interface Atribucion {
+    nombre: string;
+    uri?: string;
+}
+
+export interface Foto {
+    photoUri: string;
+    atribuciones: Atribucion[];
+}
+
 // Los campos de Google que pedimos
 interface LugarGoogle {
     id: string;
@@ -22,7 +37,9 @@ interface LugarGoogle {
     googleMapsUri?: string;
 }
 
-const URL_BUSQUEDA = 'https://places.googleapis.com/v1/places:searchText';
+
+const URL_BASE = 'https://places.googleapis.com/v1';
+const URL_BUSQUEDA = `${URL_BASE}/places:searchText`;
 
 // Fotos por local para el carrusel de la tarjeta. Google puede traer menos (o ninguna)
 const MAX_FOTOS = 5;
@@ -36,10 +53,11 @@ const CAMPOS = [
     'places.userRatingCount',
     'places.photos',
     'places.googleMapsUri',
+    'nextPageToken'
 ].join(',');
 
 
-export async function buscarLugares(q: string): Promise<Lugar[]> {
+export async function buscarLugares(q: string, pageToken?: string): Promise<PaginaLugares> {
 
     // Llamada a Google (google pide POST)
     const respuesta = await fetch(URL_BUSQUEDA, {
@@ -52,7 +70,8 @@ export async function buscarLugares(q: string): Promise<Lugar[]> {
         body: JSON.stringify({
             textQuery: q,
             languageCode: 'es',
-            regionCode: 'ES' // da prioridad a resultados de España
+            regionCode: 'ES', // da prioridad a resultados de España
+            ...(pageToken ? { pageToken } : {}), // solo se envía si pedimos la página siguiente
         })
     })
 
@@ -62,16 +81,19 @@ export async function buscarLugares(q: string): Promise<Lugar[]> {
     }
 
     // Leer la respuesta, si no hay resultados Google no manda places
-    const datos = await respuesta.json() as { places?: LugarGoogle[] };
+    const datos = await respuesta.json() as { places?: LugarGoogle[]; nextPageToken?: string };
 
-    // Traducir cada local de Google al formato del contrato
-    return (datos.places ?? []).map((g) => ({
-        placeId: g.id,
-        nombre: g.displayName?.text ?? '',
-        direccion: g.formattedAddress,
-        valoracion: g.rating,
-        numResenas: g.userRatingCount,
-        fotoNames: g.photos?.slice(0, MAX_FOTOS).map((f) => f.name), // hasta 5 fotos para el carrusel
-        googleMapsUri: g.googleMapsUri,
-    }));
+    return {
+        // Traducir cada local de Google al formato del contrato
+        resultados: (datos.places ?? []).map((g) => ({
+            placeId: g.id,
+            nombre: g.displayName?.text ?? '',
+            direccion: g.formattedAddress,
+            valoracion: g.rating,
+            numResenas: g.userRatingCount,
+            fotoNames: g.photos?.slice(0, MAX_FOTOS).map((f) => f.name),
+            googleMapsUri: g.googleMapsUri,
+        })),
+        nextPageToken: datos.nextPageToken,
+    };
 }
