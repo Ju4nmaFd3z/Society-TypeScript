@@ -1,0 +1,77 @@
+<div class="pared flex min-h-screen items-center justify-center p-espacio-16">
+  <app-tarjeta-cristal densidad="denso" [destacada]="true" class="relative w-full max-w-md">
+    <h1 class="font-display text-titulo-pantalla-24 text-tinta">Tu cuenta</h1>
+    <p class="mt-espacio-6 text-cuerpo-secundario-12-5 text-texto-secundario">
+      Crea tu cuenta o entra para guardar tu local y tu contenido.
+    </p>
+
+    <div role="tablist" aria-label="Crear cuenta o iniciar sesión" class="mt-espacio-16 flex gap-espacio-8">
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="modo() === 'crear'"
+        [class]="modo() === 'crear' ? 'chip-activo' : 'chip cristal-claro'"
+        (click)="cambiarModo('crear')"
+      >
+        Crear cuenta
+      </button>
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="modo() === 'entrar'"
+        [class]="modo() === 'entrar' ? 'chip-activo' : 'chip cristal-claro'"
+        (click)="cambiarModo('entrar')"
+      >
+        Iniciar sesión
+      </button>
+    </div>
+
+    <form class="mt-espacio-16 flex flex-col gap-espacio-14" [formGroup]="formulario" (ngSubmit)="enviar()" novalidate>
+      <app-campo-cristal
+        etiqueta="Correo electrónico"
+        tipo="email"
+        marcador="nombre@correo.es"
+        autocompletar="email"
+        formControlName="correo"
+        [error]="errorDe('correo')"
+      />
+
+      <app-campo-cristal
+        etiqueta="Contraseña"
+        [tipo]="mostrarContrasena() ? 'text' : 'password'"
+        [autocompletar]="modo() === 'crear' ? 'new-password' : 'current-password'"
+        formControlName="contrasena"
+        [ayuda]="modo() === 'crear' ? 'Mínimo 8 caracteres.' : ''"
+        [error]="errorDe('contrasena')"
+      >
+        <button
+          campoAccion
+          type="button"
+          class="text-cuerpo-pequeno-11-5 font-bold text-azul underline"
+          [attr.aria-pressed]="mostrarContrasena()"
+          (click)="mostrarContrasena.set(!mostrarContrasena())"
+        >
+          {{ mostrarContrasena() ? 'Ocultar' : 'Mostrar' }}
+        </button>
+      </app-campo-cristal>
+
+      @if (modo() === 'crear') {
+        <app-casilla formControlName="terminos" [error]="errorDe('terminos')">
+          Acepto los términos y la política de privacidad
+        </app-casilla>
+      }
+
+      @if (errorServidor()) {
+        <p class="text-cuerpo-secundario-12-5 text-alerta" role="alert">{{ errorServidor() }}</p>
+      }
+
+      @if (sinConexion()) {
+        <app-estado-error mensaje="No hemos podido conectar para entrar." (reintentar)="enviar()" />
+      } @else {
+        <button appBoton type="submit" class="w-full" [disabled]="enviando()" [attr.aria-busy]="enviando()">
+          {{ enviando() ? 'Enviando…' : 'Continuar' }}
+        </button>
+      }
+    </form>
+  </app-tarjeta-cristal>
+</div>

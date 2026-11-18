@@ -42,6 +42,23 @@ Están en `src/app/shared/ui` y se importan desde `shared/ui` (`index.ts`): bot�
 
 La página `/catalogo` los muestra todos. Es pública y solo sirve para desarrollo y revisión. Los valores salen de `docs/diseno/sistema-de-diseno.md` del repositorio Society.
 
+## Rutas y sesión
+
+Las rutas están en `src/app/app.routes.ts` y todas son lazy. Salvo `/acceso`, las vistas son páginas vacías hasta su sprint.
+
+| Rutas | Quién entra |
+| --- | --- |
+| `/acceso` | Solo quien no tiene sesión (`sinSesion`) |
+| `/alta/buscar`, `/alta/manual`, `/alta/analisis/:id`, `/ficha`, `/perfil` | Con sesión (`conSesion`) |
+| `/resumen`, `/crear/idea\|estetica\|fotos`, `/contenido`, `/contenido/:id`, `/contenido/:id/publicar`, `/oportunidades`, `/oportunidades/:id`, `/calendario` | Con sesión y el alta del local completada (`altaCompletada`) |
+| `/catalogo` | Cualquiera |
+
+Los guards (`core/sesion/guards.ts`) usan `SesionSimuladaService`, que es **provisional**: no hay API de autenticación todavía.
+
+- No recibe ni guarda la contraseña.
+- La sesión solo existe en memoria: al recargar la página se pierde.
+- `local@ejemplo.es` (con cualquier contraseña de 8 caracteres o más) entra con el alta completada y va a `/resumen`. Un correo nuevo crea una cuenta con el alta pendiente y va a `/alta/buscar`. Un correo desconocido da «credenciales incorrectas», y tras 5 fallos, «demasiados intentos».
+
 ## Tests
 
     npm test

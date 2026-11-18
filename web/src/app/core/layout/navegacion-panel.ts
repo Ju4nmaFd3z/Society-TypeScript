@@ -8,7 +8,7 @@ export interface ElementoNavegacion {
 export const NAVEGACION_PANEL: readonly ElementoNavegacion[] = [
   { etiqueta: 'Resumen', ruta: 'resumen' },
   { etiqueta: 'Alta / Ficha', ruta: 'ficha' },
-  { etiqueta: 'Crear contenido', ruta: 'crear-contenido' },
+  { etiqueta: 'Crear contenido', ruta: 'crear/idea' },
   { etiqueta: 'Contenido', ruta: 'contenido' },
   { etiqueta: 'Oportunidades', ruta: 'oportunidades' },
   { etiqueta: 'Calendario', ruta: 'calendario' },
