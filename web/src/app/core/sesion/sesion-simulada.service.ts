@@ -1,93 +1,60 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable } from '@angular/core';
 
-export type MotivoError = 'credenciales' | 'correo-registrado' | 'demasiados-intentos' | 'sin-conexion';
+// Una cuenta de la sesión simulada: su correo y si ya dio de alta su local
+interface Cuenta {
+  correo: string;
+  altaCompletada: boolean;
+}
 
-export type ResultadoAcceso = { ok: true; destino: string } | { ok: false; motivo: MotivoError };
-
-/** Correo de la cuenta de ejemplo que ya tiene el local dado de alta. */
-export const CORREO_DE_EJEMPLO = 'local@ejemplo.es';
-
-const INTENTOS_MAXIMOS = 5;
-const RETRASO_MS = 400;
-
-/**
- * PROVISIONAL (SOCIETY-55): sesión con datos simulados, a la espera de la API de autenticación.
- *
- * - No recibe ni guarda la contraseña: la real nunca se guarda en la app ni en los registros.
- * - Solo existe en memoria: al recargar la página se pierde la sesión.
- * - Cuentas conocidas: `CORREO_DE_EJEMPLO` (con el alta completada) y las que se creen en esta sesión
- *   del navegador (con el alta pendiente).
- * - Cualquier correo desconocido da «credenciales incorrectas».
- */
+// PROVISIONAL: sesión de mentira hasta que la web use la API de autenticación.
+// No guarda contraseñas y se pierde al recargar la página.
 @Injectable({ providedIn: 'root' })
 export class SesionSimuladaService {
-  private readonly cuentas = new Map<string, boolean>([[CORREO_DE_EJEMPLO, true]]);
-  private intentosFallidos = 0;
+  // Cuenta de ejemplo con el local ya dado de alta
+  private cuentas: Cuenta[] = [{ correo: 'local@ejemplo.es', altaCompletada: true }];
 
-  private readonly _correo = signal<string | null>(null);
-  private readonly _altaCompletada = signal(false);
+  // Cuenta con la que se ha entrado; null si no hay sesión
+  private cuentaActual: Cuenta | null = null;
 
-  readonly correo = this._correo.asReadonly();
-  readonly autenticada = computed(() => this._correo() !== null);
-  readonly altaCompletada = this._altaCompletada.asReadonly();
-
-  /** Ruta a la que va la persona según el estado del alta de su local. */
-  destinoInicial(): string {
-    return this._altaCompletada() ? '/resumen' : '/alta/buscar';
+  haySesion(): boolean {
+    return this.cuentaActual !== null;
   }
 
-  async registrar(correo: string): Promise<ResultadoAcceso> {
-    await this.esperar();
-    if (!this.hayConexion()) return { ok: false, motivo: 'sin-conexion' };
-    const clave = this.normalizar(correo);
-    if (this.cuentas.has(clave)) return { ok: false, motivo: 'correo-registrado' };
-    this.cuentas.set(clave, false);
-    this.abrir(clave, false);
-    return { ok: true, destino: this.destinoInicial() };
+  altaCompletada(): boolean {
+    return this.cuentaActual !== null && this.cuentaActual.altaCompletada;
   }
 
-  async iniciarSesion(correo: string): Promise<ResultadoAcceso> {
-    await this.esperar();
-    if (!this.hayConexion()) return { ok: false, motivo: 'sin-conexion' };
-    if (this.intentosFallidos >= INTENTOS_MAXIMOS) return { ok: false, motivo: 'demasiados-intentos' };
-    const clave = this.normalizar(correo);
-    const alta = this.cuentas.get(clave);
-    if (alta === undefined) {
-      this.intentosFallidos++;
-      return { ok: false, motivo: 'credenciales' };
+  // Devuelve false si el correo no existe
+  iniciarSesion(correo: string): boolean {
+    const cuenta = this.buscarCuenta(correo);
+    if (!cuenta) {
+      return false;
     }
-    this.abrir(clave, alta);
-    return { ok: true, destino: this.destinoInicial() };
+    this.cuentaActual = cuenta;
+    return true;
   }
 
-  /** El alta del local termina en las pantallas 02 a 04 (aún sin hacer). */
-  completarAlta(): void {
-    const correo = this._correo();
-    if (correo === null) return;
-    this.cuentas.set(correo, true);
-    this._altaCompletada.set(true);
+  // Devuelve false si el correo ya tiene cuenta
+  registrar(correo: string): boolean {
+    if (this.buscarCuenta(correo)) {
+      return false;
+    }
+    const nueva: Cuenta = { correo: correo.toLowerCase(), altaCompletada: false };
+    this.cuentas.push(nueva);
+    this.cuentaActual = nueva;
+    return true;
   }
 
   cerrarSesion(): void {
-    this._correo.set(null);
-    this._altaCompletada.set(false);
+    this.cuentaActual = null;
   }
 
-  private abrir(correo: string, alta: boolean): void {
-    this.intentosFallidos = 0;
-    this._correo.set(correo);
-    this._altaCompletada.set(alta);
+  // Ruta a la que se va al entrar, según si el local ya está dado de alta
+  rutaDeInicio(): string {
+    return this.altaCompletada() ? '/resumen' : '/alta/buscar';
   }
 
-  private normalizar(correo: string): string {
-    return correo.trim().toLowerCase();
-  }
-
-  private hayConexion(): boolean {
-    return typeof navigator === 'undefined' || navigator.onLine;
-  }
-
-  private esperar(): Promise<void> {
-    return new Promise((resolver) => setTimeout(resolver, RETRASO_MS));
+  private buscarCuenta(correo: string): Cuenta | undefined {
+    return this.cuentas.find((cuenta) => cuenta.correo === correo.toLowerCase());
   }
 }

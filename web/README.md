@@ -38,7 +38,7 @@ El panel usa Tailwind CSS con el tema «papel y cristal» de Figma.
 
 ## Componentes reutilizables
 
-Están en `src/app/shared/ui` y se importan desde `shared/ui` (`index.ts`): botón (`appBoton`, primario y secundario), campo de cristal con etiqueta, casilla, chip, etiquetas de origen, confianza y estado, tarjeta de cristal y los estados cargando, vacío y error (con «Reintentar»). El campo y la casilla funcionan con formularios reactivos (`formControlName`).
+Están en `src/app/shared/ui`, uno por carpeta: botón (`app-boton`, primario y secundario), campo de cristal con etiqueta, casilla, chip, etiquetas de origen, confianza y estado, tarjeta de cristal y los estados cargando, vacío y error (con «Reintentar»). Reciben sus datos con `@Input` y avisan con `@Output`. El campo y la casilla reciben su `FormControl` en la entrada `control`.
 
 La página `/catalogo` los muestra todos. Es pública y solo sirve para desarrollo y revisión. Los valores salen de `docs/diseno/sistema-de-diseno.md` del repositorio Society.
 
@@ -57,7 +57,7 @@ Los guards (`core/sesion/guards.ts`) usan `SesionSimuladaService`, que es **prov
 
 - No recibe ni guarda la contraseña.
 - La sesión solo existe en memoria: al recargar la página se pierde.
-- `local@ejemplo.es` (con cualquier contraseña de 8 caracteres o más) entra con el alta completada y va a `/resumen`. Un correo nuevo crea una cuenta con el alta pendiente y va a `/alta/buscar`. Un correo desconocido da «credenciales incorrectas», y tras 5 fallos, «demasiados intentos».
+- `local@ejemplo.es` (con cualquier contraseña de 8 caracteres o más) entra con el alta completada y va a `/resumen`. Un correo nuevo crea una cuenta con el alta pendiente y va a `/alta/buscar`. Un correo desconocido da «credenciales incorrectas».
 
 ## Tests
 

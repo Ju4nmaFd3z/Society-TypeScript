@@ -268,7 +268,7 @@
   }
 
   /*
-   * Botón secundario: se usa junto a .cristal-claro. Lo usa `appBoton` (shared/ui).
+   * Botón secundario: se usa junto a .cristal-claro. Lo usa `app-boton` (shared/ui).
    */
   .boton-secundario {
     display: inline-flex;

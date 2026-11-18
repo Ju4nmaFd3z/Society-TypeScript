@@ -1,30 +1,21 @@
-import { Component, signal } from '@angular/core';
-import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import {
-  BotonComponent,
-  CampoCristalComponent,
-  CasillaComponent,
-  ChipComponent,
-  EstadoCargandoComponent,
-  EstadoErrorComponent,
-  EstadoVacioComponent,
-  EtiquetaConfianzaComponent,
-  EtiquetaEstadoComponent,
-  EtiquetaOrigenComponent,
-  TarjetaCristalComponent,
-  type Confianza,
-  type EstadoPieza,
-  type Origen,
-} from '../../shared/ui';
+import { Component } from '@angular/core';
+import { FormControl } from '@angular/forms';
+import { BotonComponent } from '../../shared/ui/boton/boton.component';
+import { CampoCristalComponent } from '../../shared/ui/campo-cristal/campo-cristal.component';
+import { CasillaComponent } from '../../shared/ui/casilla/casilla.component';
+import { ChipComponent } from '../../shared/ui/chip/chip.component';
+import { EstadoCargandoComponent } from '../../shared/ui/estado-cargando/estado-cargando.component';
+import { EstadoErrorComponent } from '../../shared/ui/estado-error/estado-error.component';
+import { EstadoVacioComponent } from '../../shared/ui/estado-vacio/estado-vacio.component';
+import { EtiquetaConfianzaComponent } from '../../shared/ui/etiqueta-confianza/etiqueta-confianza.component';
+import { EtiquetaEstadoComponent } from '../../shared/ui/etiqueta-estado/etiqueta-estado.component';
+import { EtiquetaOrigenComponent } from '../../shared/ui/etiqueta-origen/etiqueta-origen.component';
+import { TarjetaCristalComponent } from '../../shared/ui/tarjeta-cristal/tarjeta-cristal.component';
 
-/**
- * Catálogo de los componentes de `shared/ui` (SOCIETY-54). Página pública, solo para
- * desarrollo y revisión: sirve de evidencia del hito H3 (componentes reutilizables).
- */
+// Catálogo con todos los componentes de shared/ui (página pública para revisar el diseño)
 @Component({
   selector: 'app-catalogo',
   imports: [
-    ReactiveFormsModule,
     BotonComponent,
     CampoCristalComponent,
     CasillaComponent,
@@ -40,15 +31,14 @@ import {
   templateUrl: './catalogo.component.html',
 })
 export class CatalogoComponent {
-  protected readonly origenes: readonly Origen[] = ['google', 'tu-web', 'ia', 'tu'];
-  protected readonly confianzas: readonly Confianza[] = ['observado', 'estimado', 'hipotesis'];
-  protected readonly estados: readonly EstadoPieza[] = ['prevista', 'publicada', 'generada', 'borrador'];
+  // Controles de ejemplo para el campo y la casilla
+  nombre = new FormControl('');
+  correo = new FormControl('nombre@');
+  propietario = new FormControl(false);
 
-  protected readonly chipActivo = signal(true);
-  protected readonly chipNeutro = signal(false);
-  protected readonly reintentos = signal(0);
+  // Qué chip está activo
+  chipActivo = 1;
 
-  protected readonly campo = new FormControl('', { nonNullable: true, validators: [Validators.required] });
-  protected readonly campoConError = new FormControl('nombre@', { nonNullable: true, validators: [Validators.email] });
-  protected readonly casilla = new FormControl(false, { nonNullable: true });
+  // Cuántas veces se ha pulsado «Reintentar»
+  reintentos = 0;
 }

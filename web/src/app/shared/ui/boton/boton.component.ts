@@ -1,22 +1,26 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
-export type VarianteBoton = 'primario' | 'secundario';
-
-/**
- * Botón del sistema de diseño. Se usa sobre un `<button>` o un `<a>`:
- * `<button appBoton variante="secundario">Cancelar</button>`.
- * El primario es amarillo; el secundario es cristal claro.
- * Dentro de un formulario, indica siempre `type="button"` o `type="submit"`.
- */
+// Botón del sistema de diseño: primario (amarillo) o secundario (cristal)
 @Component({
-  selector: 'button[appBoton], a[appBoton]',
-  template: '<ng-content />',
-  host: { '[class]': 'clases()' },
+  selector: 'app-boton',
+  template: `
+    <button [type]="tipo" [disabled]="deshabilitado" [class]="clases">
+      <ng-content></ng-content>
+    </button>
+  `,
 })
 export class BotonComponent {
-  readonly variante = input<VarianteBoton>('primario');
+  @Input() variante: 'primario' | 'secundario' = 'primario';
+  @Input() tipo: 'button' | 'submit' = 'button';
+  @Input() deshabilitado = false;
+  @Input() anchoCompleto = false;
 
-  protected readonly clases = computed(() =>
-    this.variante() === 'primario' ? 'boton-primario' : 'boton-secundario cristal-claro',
-  );
+  // Clases según la variante y el ancho
+  get clases(): string {
+    let clases = this.variante === 'primario' ? 'boton-primario' : 'boton-secundario cristal-claro';
+    if (this.anchoCompleto) {
+      clases += ' w-full';
+    }
+    return clases;
+  }
 }
