@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Society API
-  version: 0.2.0
+  version: 0.3.0
   description: |
     API propia de Society. Los clientes (app Android y panel web) solo hablan con esta API.
     Este contrato documenta únicamente nuestras rutas `/api/v1/...`, no las de Google.
