@@ -47,4 +47,19 @@ model restaurante {
   declara_gestor_en      DateTime       @db.Timestamptz(6)
   creado_en              DateTime       @default(now()) @db.Timestamptz(6)
   actualizado_en         DateTime       @updatedAt @db.Timestamptz(6)
+  canales                canal[]
+}
+
+// Dónde está el local en internet: su web, su Instagram, su teléfono...
+model canal {
+  id              String      @id @default(uuid()) @db.Uuid
+  restaurante_id  String      @db.Uuid
+  restaurante     restaurante @relation(fields: [restaurante_id], references: [id], onDelete: Cascade)
+  tipo            String // WEB · INSTAGRAM · TIKTOK · WHATSAPP · TELEFONO
+  valor           String // URL, @usuario o teléfono
+  fuente          String // GOOGLE · WEB · USUARIO · INSTAGRAM
+  acepta_reservas Boolean     @default(false)
+  editado         Boolean     @default(false) // si el usuario lo cambió, el análisis no lo pisa
+
+  @@unique([restaurante_id, tipo, valor])
 }
