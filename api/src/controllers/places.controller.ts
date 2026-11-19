@@ -2,8 +2,7 @@ import type { Request, Response } from 'express';
 import { buscarLugares, obtenerFoto } from '../services/places.services.js';
 import { ErrorApi } from '../utils/error-api.js';
 
-// Un name válido es "places/{placeId}/photos/{fotoId}". Se valida con esta forma exacta
-// porque el valor se pega dentro de la URL que llamamos a Google, con nuestra clave.
+// name se pega en la URL de Google, así que solo se acepta "places/{id}/photos/{id}"
 const FORMATO_NAME = /^places\/[^/]+\/photos\/[^/]+$/;
 
 // GET /places/search?q=&pageToken=
@@ -15,7 +14,7 @@ export async function buscar(req: Request, res: Response) {
     if (typeof q !== 'string' || q.trim() === '') {
         throw new ErrorApi(400, 'VALIDACION', 'Escribe el nombre del local o la zona');
     }
-    // pageToken es opcional, pero si llega tiene que ser un solo texto
+    // pageToken es opcional
     if (pageToken !== undefined && (typeof pageToken !== 'string' || pageToken === '')) {
         throw new ErrorApi(400, 'VALIDACION', 'pageToken no es válido');
     }
@@ -32,7 +31,7 @@ export async function foto(req: Request, res: Response) {
         throw new ErrorApi(400, 'VALIDACION', 'name no es válido');
     }
 
-    // La query siempre llega como texto: se convierte a número y se comprueba el rango del contrato (1–4800)
+    // la query llega como texto
     const ancho = typeof maxWidthPx === 'string' ? Number(maxWidthPx) : NaN;
     if (!Number.isInteger(ancho) || ancho < 1 || ancho > 4800) {
         throw new ErrorApi(400, 'VALIDACION', 'maxWidthPx debe ser un entero entre 1 y 4800');

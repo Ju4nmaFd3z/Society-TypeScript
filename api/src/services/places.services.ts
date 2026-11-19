@@ -13,7 +13,7 @@ export interface Lugar {
 
 export interface PaginaLugares {
     resultados: Lugar[];
-    nextPageToken?: string; // ausente cuando no hay más páginas
+    nextPageToken?: string;
 }
 
 export interface Atribucion {
@@ -57,8 +57,7 @@ const CAMPOS = [
 ].join(',');
 
 
-// Si Google responde con error, lo traducimos a nuestros códigos comunes.
-// 429 = cuota agotada; cualquier otro fallo = proveedor caído.
+// Traduce los errores de Google a los nuestros
 async function lanzarSiError(respuesta: Response): Promise<void> {
     if (respuesta.ok) return;
 
@@ -84,7 +83,7 @@ export async function buscarLugares(q: string, pageToken?: string): Promise<Pagi
             textQuery: q,
             languageCode: 'es',
             regionCode: 'ES', // da prioridad a resultados de España
-            ...(pageToken ? { pageToken } : {}), // solo se envía si pedimos la página siguiente
+            ...(pageToken ? { pageToken } : {}),
         })
     })
 
@@ -94,7 +93,6 @@ export async function buscarLugares(q: string, pageToken?: string): Promise<Pagi
     const datos = await respuesta.json() as { places?: LugarGoogle[]; nextPageToken?: string };
 
     return {
-        // Traducir cada local de Google al formato del contrato
         resultados: (datos.places ?? []).map((g) => ({
             placeId: g.id,
             nombre: g.displayName?.text ?? '',
@@ -110,16 +108,15 @@ export async function buscarLugares(q: string, pageToken?: string): Promise<Pagi
 
 export async function obtenerFoto(name: string, maxWidthPx: number): Promise<Foto> {
     const clave = process.env.GOOGLE_PLACES_API_KEY!;
-    // name tiene la forma "places/{placeId}/photos/{fotoId}": el placeId es el 2º trozo
+    // name es "places/{placeId}/photos/{fotoId}"
     const placeId = name.split('/')[1];
 
-    // Las dos llamadas no dependen una de otra, así que van a la vez
     const [media, detalle] = await Promise.all([
-        // skipHttpRedirect=true hace que Google devuelva un JSON con la URL en vez de redirigir a la imagen
+        // skipHttpRedirect para que devuelva la URL en JSON y no redirija a la imagen
         fetch(`${URL_BASE}/${name}/media?maxWidthPx=${maxWidthPx}&skipHttpRedirect=true`, {
             headers: { 'X-Goog-Api-Key': clave },
         }),
-        // Los autores no vienen en /media: hay que pedirlos en los datos del lugar
+        // los autores no vienen en /media, están en los datos del lugar
         fetch(`${URL_BASE}/places/${placeId}`, {
             headers: {
                 'X-Goog-Api-Key': clave,
@@ -128,7 +125,7 @@ export async function obtenerFoto(name: string, maxWidthPx: number): Promise<Fot
         }),
     ]);
 
-    // Un name que Google no reconoce no es un fallo del proveedor: esa foto no existe
+    // foto que Google no reconoce
     if (media.status === 400 || media.status === 404) {
         throw new ErrorApi(404, 'NO_ENCONTRADO', 'No existe esa foto');
     }
@@ -136,7 +133,7 @@ export async function obtenerFoto(name: string, maxWidthPx: number): Promise<Fot
 
     const { photoUri } = await media.json() as { photoUri: string };
 
-    // Si no podemos obtener los autores, la foto se muestra igual con atribuciones vacías
+    // si fallan los autores, la foto se devuelve igual sin atribuciones
     let atribuciones: Atribucion[] = [];
     if (detalle.ok) {
         const datos = await detalle.json() as {
