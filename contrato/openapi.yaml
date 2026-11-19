@@ -30,7 +30,7 @@ paths:
         con `pageToken` mientras exista `nextPageToken`.
 
         Cada resultado trae solo los campos de la tarjeta: `placeId`, `nombre`,
-        `direccion`, `valoracion`, `numResenas`, `fotoNames` y `googleMapsUri`.
+        `direccion`, `valoracion`, `numResenas`, `fotos` y `googleMapsUri`.
 
         Si la búsqueda no encuentra locales, responde 200 con `resultados` vacío (estado
         «vacío» de la pantalla). Un texto vacío es un 400.
@@ -79,10 +79,11 @@ paths:
   /places/photo:
     get:
       operationId: obtenerFotoLugar
-      summary: Obtener la URL de la foto de un local y sus atribuciones
+      summary: Obtener la URL de la foto de un local
       description: |
-        Devuelve la URL de una foto para pintar la imagen de la tarjeta de local, junto con
-        los autores de la foto, que hay que mostrar cuando existan.
+        Devuelve la URL de una foto para pintar la imagen de la tarjeta de local. Los autores
+        de la foto no vienen aquí: están en `fotos[].atribuciones` de cada resultado de
+        `/places/search` y hay que mostrarlos cuando existan.
 
         Internamente la API llama a Google Places (Place Photos,
         `GET /v1/{name}/media?skipHttpRedirect=true`).
@@ -97,7 +98,7 @@ paths:
         - name: name
           in: query
           required: true
-          description: Uno de los valores de `fotoNames` de un resultado de `/places/search`.
+          description: El `name` de una de las `fotos` de un resultado de `/places/search`.
           schema:
             type: string
         - name: maxWidthPx
@@ -110,7 +111,7 @@ paths:
             maximum: 4800
       responses:
         '200':
-          description: URL de la foto y sus atribuciones.
+          description: URL de la foto.
           content:
             application/json:
               schema:
@@ -442,32 +443,41 @@ components:
         numResenas:
           type: integer
           description: Número total de reseñas (`userRatingCount`).
-        fotoNames:
+        fotos:
           type: array
           maxItems: 5
           items:
-            type: string
+            $ref: '#/components/schemas/FotoLugar'
           description: |
-            Referencias de hasta 5 fotos del local (`photos[].name`), para el carrusel de la
-            tarjeta. No son URLs: cada una se pasa como `name` a `/places/photo`, que devuelve
-            la imagen y su autor. Puede traer menos de 5. Ausente si el local no tiene fotos.
+            Hasta 5 fotos del local para el carrusel de la tarjeta. Puede traer menos.
+            Ausente si el local no tiene fotos.
         googleMapsUri:
           type: string
           format: uri
           description: Enlace al local en Google Maps.
 
+    FotoLugar:
+      type: object
+      required: [name, atribuciones]
+      properties:
+        name:
+          type: string
+          description: |
+            Referencia de la foto, no una URL. Se pasa como `name` a `/places/photo`, que
+            devuelve la imagen. Caduca y no se guarda.
+        atribuciones:
+          type: array
+          description: Autores de la foto, que hay que mostrar. Vacío si no constan.
+          items:
+            $ref: '#/components/schemas/Atribucion'
+
     FotoRespuesta:
       type: object
-      required: [photoUri, atribuciones]
+      required: [photoUri]
       properties:
         photoUri:
           type: string
           format: uri
-        atribuciones:
-          type: array
-          description: Autores de la foto. Vacío si no constan.
-          items:
-            $ref: '#/components/schemas/Atribucion'
 
     Atribucion:
       type: object
