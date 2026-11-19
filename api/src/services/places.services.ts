@@ -11,6 +11,21 @@ export interface Lugar {
     googleMapsUri?: string;
 }
 
+export interface PaginaLugares {
+    resultados: Lugar[];
+    nextPageToken?: string;
+}
+
+export interface Atribucion {
+    nombre: string;
+    uri?: string;
+}
+
+export interface Foto {
+    photoUri: string;
+    atribuciones: Atribucion[];
+}
+
 // Los campos de Google que pedimos
 interface LugarGoogle {
     id: string;
@@ -22,7 +37,9 @@ interface LugarGoogle {
     googleMapsUri?: string;
 }
 
-const URL_BUSQUEDA = 'https://places.googleapis.com/v1/places:searchText';
+
+const URL_BASE = 'https://places.googleapis.com/v1';
+const URL_BUSQUEDA = `${URL_BASE}/places:searchText`;
 
 // Fotos por local para el carrusel de la tarjeta. Google puede traer menos (o ninguna)
 const MAX_FOTOS = 5;
@@ -36,10 +53,23 @@ const CAMPOS = [
     'places.userRatingCount',
     'places.photos',
     'places.googleMapsUri',
+    'nextPageToken'
 ].join(',');
 
 
-export async function buscarLugares(q: string): Promise<Lugar[]> {
+// Traduce los errores de Google a los nuestros
+async function lanzarSiError(respuesta: Response): Promise<void> {
+    if (respuesta.ok) return;
+
+    console.error('Google Places respondió', respuesta.status, await respuesta.text());
+
+    if (respuesta.status === 429) {
+        throw new ErrorApi(429, 'LIMITE_ALCANZADO', 'Demasiadas búsquedas. Prueba en unos minutos.', true);
+    }
+    throw new ErrorApi(503, 'PROVEEDOR_NO_DISPONIBLE', 'No se pudo buscar en Google. Inténtalo de nuevo.', true);
+}
+
+export async function buscarLugares(q: string, pageToken?: string): Promise<PaginaLugares> {
 
     // Llamada a Google (google pide POST)
     const respuesta = await fetch(URL_BUSQUEDA, {
@@ -52,26 +82,66 @@ export async function buscarLugares(q: string): Promise<Lugar[]> {
         body: JSON.stringify({
             textQuery: q,
             languageCode: 'es',
-            regionCode: 'ES' // da prioridad a resultados de España
+            regionCode: 'ES', // da prioridad a resultados de España
+            ...(pageToken ? { pageToken } : {}),
         })
     })
 
-    if (!respuesta.ok) {
-        console.error('Google Places respondió', respuesta.status, await respuesta.text());
-        throw new ErrorApi(503, 'PROVEEDOR_NO_DISPONIBLE', 'No se pudo buscar en Google. Inténtalo de nuevo.', true);
-    }
+    await lanzarSiError(respuesta);
 
     // Leer la respuesta, si no hay resultados Google no manda places
-    const datos = await respuesta.json() as { places?: LugarGoogle[] };
+    const datos = await respuesta.json() as { places?: LugarGoogle[]; nextPageToken?: string };
 
-    // Traducir cada local de Google al formato del contrato
-    return (datos.places ?? []).map((g) => ({
-        placeId: g.id,
-        nombre: g.displayName?.text ?? '',
-        direccion: g.formattedAddress,
-        valoracion: g.rating,
-        numResenas: g.userRatingCount,
-        fotoNames: g.photos?.slice(0, MAX_FOTOS).map((f) => f.name), // hasta 5 fotos para el carrusel
-        googleMapsUri: g.googleMapsUri,
-    }));
+    return {
+        resultados: (datos.places ?? []).map((g) => ({
+            placeId: g.id,
+            nombre: g.displayName?.text ?? '',
+            direccion: g.formattedAddress,
+            valoracion: g.rating,
+            numResenas: g.userRatingCount,
+            fotoNames: g.photos?.slice(0, MAX_FOTOS).map((f) => f.name),
+            googleMapsUri: g.googleMapsUri,
+        })),
+        nextPageToken: datos.nextPageToken,
+    };
+}
+
+export async function obtenerFoto(name: string, maxWidthPx: number): Promise<Foto> {
+    const clave = process.env.GOOGLE_PLACES_API_KEY!;
+    // name es "places/{placeId}/photos/{fotoId}"
+    const placeId = name.split('/')[1];
+
+    const [media, detalle] = await Promise.all([
+        // skipHttpRedirect para que devuelva la URL en JSON y no redirija a la imagen
+        fetch(`${URL_BASE}/${name}/media?maxWidthPx=${maxWidthPx}&skipHttpRedirect=true`, {
+            headers: { 'X-Goog-Api-Key': clave },
+        }),
+        // los autores no vienen en /media, están en los datos del lugar
+        fetch(`${URL_BASE}/places/${placeId}`, {
+            headers: {
+                'X-Goog-Api-Key': clave,
+                'X-Goog-FieldMask': 'photos.name,photos.authorAttributions',
+            },
+        }),
+    ]);
+
+    // foto que Google no reconoce
+    if (media.status === 400 || media.status === 404) {
+        throw new ErrorApi(404, 'NO_ENCONTRADO', 'No existe esa foto');
+    }
+    await lanzarSiError(media);
+
+    const { photoUri } = await media.json() as { photoUri: string };
+
+    // si fallan los autores, la foto se devuelve igual sin atribuciones
+    let atribuciones: Atribucion[] = [];
+    if (detalle.ok) {
+        const datos = await detalle.json() as {
+            photos?: { name: string; authorAttributions?: { displayName: string; uri?: string }[] }[];
+        };
+        const foto = datos.photos?.find((f) => f.name === name);
+        atribuciones = (foto?.authorAttributions ?? []).map((a) => ({ nombre: a.displayName, uri: a.uri }));
+    }
+
+    return { photoUri, atribuciones };
 }
