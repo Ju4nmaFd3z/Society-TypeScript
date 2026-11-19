@@ -25,6 +25,7 @@ src/
 | `POST /auth/registro` | pública | crea el usuario en Supabase Auth (ya confirmado) y su `perfil_usuario`. Devuelve la sesión |
 | `POST /auth/acceso` | pública | inicia sesión y devuelve `{accessToken, refreshToken, expiraEn}` |
 | `GET /places/search?q=&pageToken=` | con token | busca en Google Places y devuelve `{resultados, nextPageToken?}`, cada resultado con hasta 5 `fotos` (`{name, atribuciones}`). La página siguiente se pide con `pageToken`. 429 `LIMITE_ALCANZADO` si Google agota la cuota |
+| `GET /restaurantes/mio` | con token | dice en qué punto del alta está el usuario: `{restaurante, altaEstado}`. Sin local, `restaurante: null` y `altaEstado: SIN_LOCAL`. Solo lee el local de quien pregunta |
 | `GET /places/photo?name=&maxWidthPx=` | con token | recibe el `name` de una foto y devuelve `{photoUri}`. 400 si `name` o `maxWidthPx` no son válidos, 404 si la foto no existe |
 | `POST /auth/refresco` | pública | con `{refreshToken}` devuelve dos tokens nuevos. El usado deja de valer. 401 `SESION_CADUCADA` si no vale |
 
