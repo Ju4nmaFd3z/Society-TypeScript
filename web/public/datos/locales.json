@@ -1,0 +1,355 @@
+ {
+  "places": [
+    {
+      "id": "loc_001",
+      "displayName": {
+        "text": "Bar El Boquerón Dorado"
+      },
+      "formattedAddress": "Calle Larios 12, Málaga",
+      "rating": 4.6,
+      "userRatingCount": 1280,
+      "photos": [
+        {
+          "name": "https://picsum.photos/seed/boqueron1/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/boqueron2/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/boqueron3/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/boqueron4/800/600"
+        }
+      ]
+    },
+    {
+      "id": "loc_002",
+      "displayName": {
+        "text": "Asador La Brasa"
+      },
+      "formattedAddress": "Calle Granada 34, Málaga",
+      "rating": 4.4,
+      "userRatingCount": 860,
+      "photos": [
+        {
+          "name": "https://picsum.photos/seed/brasa1/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/brasa2/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/brasa3/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/brasa4/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/brasa5/800/600"
+        }
+      ]
+    },
+    {
+      "id": "loc_003",
+      "displayName": {
+        "text": "Cafetería Alameda"
+      },
+      "formattedAddress": "Alameda Principal 8, Málaga",
+      "rating": 4.1,
+      "userRatingCount": 342,
+      "photos": [
+        {
+          "name": "https://picsum.photos/seed/alameda1/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/alameda2/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/alameda3/800/600"
+        }
+      ]
+    },
+    {
+      "id": "loc_004",
+      "displayName": {
+        "text": "Taberna del Puerto"
+      },
+      "formattedAddress": "Muelle Uno, Málaga",
+      "rating": 4.7,
+      "userRatingCount": 2105,
+      "photos": [
+        {
+          "name": "https://picsum.photos/seed/puerto1/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/puerto2/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/puerto3/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/puerto4/800/600"
+        }
+      ]
+    },
+    {
+      "id": "loc_005",
+      "displayName": {
+        "text": "Pizzería Trastevere"
+      },
+      "formattedAddress": "Calle Carretería 51, Málaga",
+      "rating": 4.3,
+      "userRatingCount": 590,
+      "photos": [
+        {
+          "name": "https://picsum.photos/seed/trastevere1/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/trastevere2/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/trastevere3/800/600"
+        }
+      ]
+    },
+    {
+      "id": "loc_006",
+      "displayName": {
+        "text": "Chiringuito Pedregalejo"
+      },
+      "formattedAddress": "Paseo Marítimo El Pedregal 20, Málaga",
+      "rating": 4.5,
+      "userRatingCount": 1740,
+      "photos": [
+        {
+          "name": "https://picsum.photos/seed/pedregalejo1/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/pedregalejo2/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/pedregalejo3/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/pedregalejo4/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/pedregalejo5/800/600"
+        }
+      ]
+    },
+    {
+      "id": "loc_007",
+      "displayName": {
+        "text": "Restaurante Sabor Sur"
+      },
+      "formattedAddress": "Calle Mármoles 3, Málaga",
+      "rating": 3.9,
+      "userRatingCount": 214,
+      "photos": []
+    },
+    {
+      "id": "loc_008",
+      "displayName": {
+        "text": "Heladería La Colmena"
+      },
+      "formattedAddress": "Plaza de la Constitución 5, Málaga",
+      "rating": 4.8,
+      "userRatingCount": 3020,
+      "photos": [
+        {
+          "name": "https://picsum.photos/seed/colmena1/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/colmena2/800/600"
+        }
+      ]
+    },
+    {
+      "id": "loc_009",
+      "displayName": {
+        "text": "Bar Los Amigos"
+      },
+      "formattedAddress": "Calle Victoria 77, Málaga",
+      "rating": 4.0,
+      "userRatingCount": 178,
+      "photos": [
+        {
+          "name": "https://picsum.photos/seed/amigos1/800/600"
+        }
+      ]
+    },
+    {
+      "id": "loc_010",
+      "displayName": {
+        "text": "Mesón Casa Lola"
+      },
+      "formattedAddress": "Calle Pozos Dulces 14, Málaga",
+      "rating": 4.2,
+      "userRatingCount": 455,
+      "photos": [
+        {
+          "name": "https://picsum.photos/seed/lola1/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/lola2/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/lola3/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/lola4/800/600"
+        }
+      ]
+    },
+    {
+      "id": "loc_011",
+      "displayName": {
+        "text": "Tapas La Cala"
+      },
+      "formattedAddress": "Calle Císter 9, Málaga",
+      "rating": 4.5,
+      "userRatingCount": 968,
+      "photos": [
+        {
+          "name": "https://picsum.photos/seed/lacala1/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/lacala2/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/lacala3/800/600"
+        }
+      ]
+    },
+    {
+      "id": "loc_012",
+      "displayName": {
+        "text": "Marisquería Los Mellizos"
+      },
+      "formattedAddress": "Calle Sancha 22, Málaga",
+      "rating": 4.6,
+      "userRatingCount": 1534,
+      "photos": [
+        {
+          "name": "https://picsum.photos/seed/mellizos1/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/mellizos2/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/mellizos3/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/mellizos4/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/mellizos5/800/600"
+        }
+      ]
+    },
+    {
+      "id": "loc_013",
+      "displayName": {
+        "text": "Café de la Plaza"
+      },
+      "formattedAddress": "Plaza de la Merced 4, Málaga",
+      "rating": 4.2,
+      "userRatingCount": 623,
+      "photos": [
+        {
+          "name": "https://picsum.photos/seed/cafeplaza1/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/cafeplaza2/800/600"
+        }
+      ]
+    },
+    {
+      "id": "loc_014",
+      "displayName": {
+        "text": "Sushi Bahía"
+      },
+      "formattedAddress": "Calle Strachan 6, Málaga",
+      "rating": 4.4,
+      "userRatingCount": 487,
+      "photos": [
+        {
+          "name": "https://picsum.photos/seed/sushibahia1/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/sushibahia2/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/sushibahia3/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/sushibahia4/800/600"
+        }
+      ]
+    },
+    {
+      "id": "loc_015",
+      "displayName": {
+        "text": "Bodega Las Flores"
+      },
+      "formattedAddress": "Calle Santa María 18, Málaga",
+      "rating": 4.3,
+      "userRatingCount": 752,
+      "photos": [
+        {
+          "name": "https://picsum.photos/seed/lasflores1/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/lasflores2/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/lasflores3/800/600"
+        }
+      ]
+    },
+    {
+      "id": "loc_016",
+      "displayName": {
+        "text": "Hamburguesería Gran Smash"
+      },
+      "formattedAddress": "Calle Comedias 10, Málaga",
+      "rating": 4.1,
+      "userRatingCount": 395,
+      "photos": [
+        {
+          "name": "https://picsum.photos/seed/smash1/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/smash2/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/smash3/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/smash4/800/600"
+        }
+      ]
+    },
+    {
+      "id": "loc_017",
+      "displayName": {
+        "text": "Chiringuito Playa Dorada"
+      },
+      "formattedAddress": "Paseo Marítimo 45, Torremolinos",
+      "rating": 4.4,
+      "userRatingCount": 1210,
+      "photos": [
+        {
+          "name": "https://picsum.photos/seed/playadorada1/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/playadorada2/800/600"
+        },
+        {
+          "name": "https://picsum.photos/seed/playadorada3/800/600"
+        }
+      ]
+    }
+  ]
+ }
