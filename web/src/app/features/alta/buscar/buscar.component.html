@@ -30,23 +30,47 @@
 
     <div class="grid grid-cols-1 gap-espacio-16 md:grid-cols-2 xl:grid-cols-3">
       @for (lugar of estado.resultados; track lugar.placeId) {
-        <app-tarjeta-cristal>
-          @if (lugar.fotos?.[0]; as foto) {
-            <img [src]="foto.name" [alt]="lugar.nombre" class="aspect-[4/3] w-full rounded-tarjeta-y-campo object-cover" />
-          }
-          <p class="mt-espacio-6 text-cuerpo-pequeno-11-5 text-texto-terciario">Google Maps</p>
-          <h2 class="mt-espacio-8 text-cuerpo-destacado-15 text-tinta">{{ lugar.nombre }}</h2>
-          @if (lugar.direccion) {
-            <p class="mt-espacio-6 text-cuerpo-secundario-12-5 text-texto-secundario">{{ lugar.direccion }}</p>
-          }
-          @if (lugar.valoracion) {
-            <p class="mt-espacio-6 text-cuerpo-secundario-12-5 text-tinta">
-              ★ {{ lugar.valoracion }} · {{ lugar.numResenas }} reseñas
-            </p>
+        <app-tarjeta-cristal [destacada]="elegido?.placeId === lugar.placeId">
+          <button type="button" class="block w-full text-left" (click)="elegir(lugar)">
+            @if (lugar.fotos?.[0]; as foto) {
+              <img [src]="foto.name" [alt]="lugar.nombre" class="aspect-[4/3] w-full rounded-tarjeta-y-campo object-cover" />
+            }
+            <p class="mt-espacio-6 text-cuerpo-pequeno-11-5 text-texto-terciario">Google Maps</p>
+            <h2 class="mt-espacio-8 text-cuerpo-destacado-15 text-tinta">{{ lugar.nombre }}</h2>
+            @if (lugar.direccion) {
+              <p class="mt-espacio-6 text-cuerpo-secundario-12-5 text-texto-secundario">{{ lugar.direccion }}</p>
+            }
+            @if (lugar.valoracion) {
+              <p class="mt-espacio-6 text-cuerpo-secundario-12-5 text-tinta">★ {{ lugar.valoracion }} · {{ lugar.numResenas }} reseñas</p>
+            }
+          </button>
+
+          @if (elegido?.placeId === lugar.placeId) {
+            <div class="mt-espacio-14 flex flex-col gap-espacio-10">
+              <app-casilla [control]="confirmacion.controls.declaraGestor">Soy propietario o gestor</app-casilla>
+              <app-boton
+                [anchoCompleto]="true"
+                [deshabilitado]="!confirmacion.controls.declaraGestor.value || creando"
+                (click)="esMiLocal()"
+              >
+                {{ creando ? 'Guardando…' : 'Es mi local' }}
+              </app-boton>
+              @if (mensajeAlta) {
+                <p class="text-cuerpo-secundario-12-5 text-alerta">{{ mensajeAlta }}</p>
+              }
+            </div>
           }
         </app-tarjeta-cristal>
       }
     </div>
+
+    @if (estado.nextPageToken) {
+      <div class="flex justify-center">
+        <app-boton variante="secundario" [deshabilitado]="estado.cargandoMas" (click)="verMas()">
+          {{ estado.cargandoMas ? 'Cargando…' : 'Ver más resultados' }}
+        </app-boton>
+      </div>
+    }
   }
 
   <a routerLink="/alta/manual" class="text-cuerpo-secundario-12-5 font-bold text-azul underline">

@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, delay, map } from 'rxjs';
+import { Observable, delay, map, timer } from 'rxjs';
+import { SesionSimuladaService } from '../../core/sesion/sesion-simulada.service';
 
 export interface LugarRespuesta {
   placeId: string;
@@ -15,6 +16,27 @@ export interface BusquedaRespuesta {
   resultados: LugarRespuesta[];
   nextPageToken?: string;
 }
+
+export type TipoLocal = 'RESTAURANTE' | 'BAR' | 'CAFETERIA' | 'OTRO';
+
+export interface AltaGooglePeticion {
+  origen: 'GOOGLE';
+  googlePlaceId: string;
+  declaraGestor: true;
+}
+
+export interface AltaManualPeticion {
+  origen: 'MANUAL';
+  nombre: string;
+  direccion: string;
+  municipio: string;
+  tipo: TipoLocal;
+  web?: string;
+  instagram?: string;
+  declaraGestor: true;
+}
+
+export type ResultadoAlta = { tipo: 'creado'; id: string } | { tipo: 'duplicado' } | { tipo: 'error' };
 
 // Un local de locales.json, con la forma que devuelve Google Places
 interface LocalGoogle {
@@ -31,7 +53,13 @@ const TAMANO_PAGINA = 6;
 // PROVISIONAL: alta de mentira con locales.json, porque la web aún no tiene token y no existe POST /restaurantes.
 @Injectable({ providedIn: 'root' })
 export class AltaSimuladaService {
-  constructor(private http: HttpClient) {}
+  // Id del local creado en esta sesión; con él, un segundo alta es duplicado (D-13)
+  private idCreado: string | null = null;
+
+  constructor(
+    private http: HttpClient,
+    private sesion: SesionSimuladaService,
+  ) {}
 
   // Filtra por nombre o dirección sin distinguir mayúsculas; el pageToken es la posición del primer resultado
   buscar(texto: string, pageToken?: string): Observable<BusquedaRespuesta> {
@@ -57,6 +85,20 @@ export class AltaSimuladaService {
           resultados: encontrados.slice(inicio, fin).map(aLugar),
           nextPageToken: fin < encontrados.length ? String(fin) : undefined,
         };
+      }),
+    );
+  }
+
+  // Recibe la petición del contrato aunque el simulado no la guarde
+  crear(peticion: AltaGooglePeticion | AltaManualPeticion): Observable<ResultadoAlta> {
+    return timer(500).pipe(
+      map((): ResultadoAlta => {
+        // Un local por cuenta (D-13)
+        if (this.sesion.altaCompletada() || this.idCreado) {
+          return { tipo: 'duplicado' };
+        }
+        this.idCreado = crypto.randomUUID();
+        return { tipo: 'creado', id: this.idCreado };
       }),
     );
   }

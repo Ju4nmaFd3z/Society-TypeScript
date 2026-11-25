@@ -1,7 +1,8 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { AltaSimuladaService, BusquedaRespuesta } from './alta-simulada.service';
+import { SesionSimuladaService } from '../../core/sesion/sesion-simulada.service';
+import { AltaSimuladaService, BusquedaRespuesta, ResultadoAlta } from './alta-simulada.service';
 
 // Ocho locales en Málaga y uno en Sevilla, para probar el filtro y las páginas de 6
 const locales = {
@@ -55,5 +56,26 @@ describe('AltaSimuladaService', () => {
 
   it('falla si se busca «error»', fakeAsync(() => {
     expect(buscar('Error')).toBe('error');
+  }));
+
+  function crear(): ResultadoAlta | undefined {
+    let resultado: ResultadoAlta | undefined;
+    alta.crear({ origen: 'GOOGLE', googlePlaceId: 'loc_0', declaraGestor: true }).subscribe((r) => (resultado = r));
+    tick(500);
+    return resultado;
+  }
+
+  it('crea el local una vez y el segundo alta es duplicado, sin marcar el alta como completada', fakeAsync(() => {
+    const sesion = TestBed.inject(SesionSimuladaService);
+    sesion.registrar('nuevo@ejemplo.es');
+
+    expect(crear()?.tipo).toBe('creado');
+    expect(crear()).toEqual({ tipo: 'duplicado' });
+    expect(sesion.altaCompletada()).toBeFalse();
+  }));
+
+  it('con el alta ya completada es duplicado', fakeAsync(() => {
+    TestBed.inject(SesionSimuladaService).iniciarSesion('local@ejemplo.es');
+    expect(crear()).toEqual({ tipo: 'duplicado' });
   }));
 });
