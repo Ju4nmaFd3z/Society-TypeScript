@@ -129,3 +129,84 @@ export async function obtenerFoto(name: string, maxWidthPx: number): Promise<Fot
     const { photoUri } = await respuesta.json() as { photoUri: string };
     return { photoUri };
 }
+
+// Datos básicos del local que se guardan al darlo de alta (D-06)
+export interface DetalleLugar {
+    placeId: string;
+    nombre: string;
+    direccion: string;
+    municipio: string;
+    provincia?: string;
+    latitud?: number;
+    longitud?: number;
+    telefono?: string;
+    web?: string;
+    tipoGoogle?: string;
+    horario?: string[];
+    googleMapsUri?: string;
+}
+
+// Lo que devuelve Google en Place Details con los campos que pedimos
+interface DetalleGoogle {
+    id: string;
+    displayName?: { text: string };
+    formattedAddress?: string;
+    addressComponents?: { longText: string; types: string[] }[];
+    location?: { latitude: number; longitude: number };
+    nationalPhoneNumber?: string;
+    websiteUri?: string;
+    primaryType?: string;
+    regularOpeningHours?: { weekdayDescriptions?: string[] };
+    googleMapsUri?: string;
+}
+
+// Place Details no lleva el prefijo "places." en los campos
+const CAMPOS_DETALLE = [
+    'id',
+    'displayName',
+    'formattedAddress',
+    'addressComponents',
+    'location',
+    'nationalPhoneNumber',
+    'websiteUri',
+    'primaryType',
+    'regularOpeningHours',
+    'googleMapsUri',
+].join(',');
+
+export async function obtenerDetalleLugar(placeId: string): Promise<DetalleLugar> {
+    const url = `${URL_BASE}/places/${encodeURIComponent(placeId)}?languageCode=es&regionCode=ES`;
+    const respuesta = await fetch(url, {
+        headers: {
+            'X-Goog-Api-Key': process.env.GOOGLE_PLACES_API_KEY!,
+            'X-Goog-FieldMask': CAMPOS_DETALLE,
+        },
+    });
+
+    // Un placeId que Google no reconoce es un error del cliente, no de Google
+    if (respuesta.status === 400 || respuesta.status === 404) {
+        throw new ErrorApi(400, 'VALIDACION', 'Ese local no existe en Google');
+    }
+    await lanzarSiError(respuesta);
+
+    const g = await respuesta.json() as DetalleGoogle;
+
+    // Busca en la dirección la parte de un tipo, por ejemplo la localidad
+    const partes = g.addressComponents ?? [];
+    const parte = (tipo: string) => partes.find((p) => p.types.includes(tipo))?.longText;
+
+    return {
+        placeId: g.id,
+        nombre: g.displayName?.text ?? '',
+        direccion: g.formattedAddress ?? '',
+        municipio: parte('locality') ?? parte('administrative_area_level_2') ?? '',
+        provincia: parte('administrative_area_level_2'),
+        latitud: g.location?.latitude,
+        longitud: g.location?.longitude,
+        telefono: g.nationalPhoneNumber,
+        web: g.websiteUri,
+        tipoGoogle: g.primaryType,
+        horario: g.regularOpeningHours?.weekdayDescriptions,
+        googleMapsUri: g.googleMapsUri,
+    };
+}
