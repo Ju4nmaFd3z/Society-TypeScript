@@ -45,6 +45,13 @@ export class SesionSimuladaService {
     return true;
   }
 
+  // Se llama al confirmar la ficha (S04); a partir de aquí se entra al resumen
+  completarAlta(): void {
+    if (this.cuentaActual) {
+      this.cuentaActual.altaCompletada = true;
+    }
+  }
+
   cerrarSesion(): void {
     this.cuentaActual = null;
   }
