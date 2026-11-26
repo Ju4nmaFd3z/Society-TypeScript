@@ -11,6 +11,7 @@ src/
 ├── routes/           asocia cada método y camino con su controlador
 ├── controllers/      traduce entre HTTP y los servicios (lee req, responde con res)
 ├── services/         lógica de negocio, sin nada de Express
+├── validaciones/     reglas del cuerpo de cada petición, con zod
 ├── db/               conexión de Prisma y cliente de Supabase Auth, compartidos por toda la API
 ├── middlewares/      404, manejador de errores y requiereAuth (protege las rutas privadas)
 ├── types/            amplía la Request de Express con userId
@@ -27,6 +28,7 @@ src/
 | `GET /places/search?q=&pageToken=` | con token | busca en Google Places y devuelve `{resultados, nextPageToken?}`, cada resultado con hasta 5 `fotos` (`{name, atribuciones}`). La página siguiente se pide con `pageToken`. 429 `LIMITE_ALCANZADO` si Google agota la cuota |
 | `GET /restaurantes/mio` | con token | dice en qué punto del alta está el usuario: `{restaurante, altaEstado}`. Sin local, `restaurante: null` y `altaEstado: SIN_LOCAL`. Solo lee el local de quien pregunta |
 | `GET /places/photo?name=&maxWidthPx=` | con token | recibe el `name` de una foto y devuelve `{photoUri}`. 400 si `name` o `maxWidthPx` no son válidos, 404 si la foto no existe |
+| `POST /restaurantes` | con token | da de alta el local del usuario y lo deja en `CREADO`. Con `origen: GOOGLE` lee los datos básicos en Place Details y guarda la web y el teléfono como canales; con `origen: MANUAL` guarda lo que escribe el usuario. Devuelve `{id, nombre, origen, altaEstado}`. 400 `VALIDACION` si el cuerpo no es válido, 409 `DUPLICADO` si el usuario ya tiene local o el local de Google ya es de otra cuenta |
 | `POST /auth/refresco` | pública | con `{refreshToken}` devuelve dos tokens nuevos. El usado deja de valer. 401 `SESION_CADUCADA` si no vale |
 
 Las rutas privadas llevan `requiereAuth` delante del controlador. Exige la cabecera `Authorization: Bearer <accessToken>`, la valida con Supabase y deja el id del usuario en `req.userId`. Sin token o con uno no válido responde 401 `SESION_CADUCADA`. El detalle de cada ruta está en el [contrato](../contrato/openapi.yaml).
@@ -38,6 +40,8 @@ Una petición recorre: `routes` → `controllers` → `services`. Si algo falla,
 ```
 
 Para devolver un error controlado desde cualquier capa: `throw new ErrorApi(404, 'NO_ENCONTRADO', 'No existe ese local')`.
+
+El cuerpo de las peticiones se comprueba con [zod](https://zod.dev) en `validaciones/`. El controlador llama a `safeParse` y, si falla, responde 400 `VALIDACION` con el primer error. Si pasa, los datos llegan al servicio ya tipados.
 
 ## Arrancar en local
 
