@@ -12,8 +12,9 @@ src/
 ├── controllers/      traduce entre HTTP y los servicios (lee req, responde con res)
 ├── services/         lógica de negocio, sin nada de Express
 ├── validaciones/     reglas del cuerpo de cada petición, con zod
+├── trabajos/         una función por tipo de trabajo del worker (manejadores.ts)
 ├── db/               conexión de Prisma y cliente de Supabase Auth, compartidos por toda la API
-├── middlewares/      404, manejador de errores y requiereAuth (protege las rutas privadas)
+├── middlewares/      404, manejador de errores, requiereAuth (rutas privadas) y requiereSecretoTrabajos (rutas del worker)
 ├── types/            amplía la Request de Express con userId
 └── utils/            ErrorApi y códigos de error comunes
 ```
@@ -42,6 +43,21 @@ Una petición recorre: `routes` → `controllers` → `services`. Si algo falla,
 Para devolver un error controlado desde cualquier capa: `throw new ErrorApi(404, 'NO_ENCONTRADO', 'No existe ese local')`.
 
 El cuerpo de las peticiones se comprueba con [zod](https://zod.dev) en `validaciones/`. El controlador llama a `safeParse` y, si falla, responde 400 `VALIDACION` con el primer error. Si pasa, los datos llegan al servicio ya tipados.
+
+## Worker: cola de trabajos
+
+Lo que tarda (análisis, imágenes, publicar en Instagram) no se hace en la petición del cliente. La API inserta una fila en la tabla `trabajo` y el worker la ejecuta por fases (D-28 y D-36). El worker son estas dos rutas internas de la misma API. No están en el contrato porque los clientes no las llaman: las llama Supabase, con la cabecera `X-Trabajos-Secreto` igual a `TRABAJOS_SECRETO`. Sin ella, 401.
+
+| Ruta | La llama | Qué hace |
+|---|---|---|
+| `POST /trabajos/ejecutar` | Supabase, al insertar un trabajo | ejecuta los trabajos pendientes, uno tras otro, hasta 240 s |
+| `POST /trabajos/barrido` | `pg_cron`, cada minuto | rescata los trabajos colgados más de 10 min y ejecuta los pendientes cuya espera ha vencido |
+
+Cada trabajo pasa por `PENDIENTE` → `EN_CURSO` → `HECHO`, o `ERROR` si una fase falla cuatro veces seguidas (se reintenta a los 10 s, 30 s y 90 s). `reclamar_trabajo()`, en la migración `trabajo`, lo reserva con `FOR UPDATE SKIP LOCKED`, así dos llamadas a la vez nunca ejecutan el mismo. Para un tipo nuevo, se añade su función en `src/trabajos/manejadores.ts`.
+
+**Activarlo en Supabase** (una vez, después de `npm run db:migrar`): en SQL Editor, guarda en Vault la URL de la API y el secreto, y ejecuta [prisma/sql/activar-trabajos.sql](prisma/sql/activar-trabajos.sql). Crea el aviso al insertar y el barrido de cada minuto. No es una migración porque `pg_net`, `pg_cron` y Vault solo existen en Supabase.
+
+**Probarlo:** en SQL Editor, `INSERT INTO trabajo (tipo) VALUES ('PRUEBA');`. En unos segundos queda en `HECHO`. Con `datos` `'{"fases": 3}'` hace tres fases y con `'{"fallar": true}'` prueba los reintentos.
 
 ## Arrancar en local
 
