@@ -63,3 +63,22 @@ model canal {
 
   @@unique([restaurante_id, tipo, valor])
 }
+
+// Cola de trabajos largos (D-28, D-36). La API inserta una fila y el worker
+// (rutas /trabajos) la ejecuta por fases. Lo reclama reclamar_trabajo(), en la migración.
+model trabajo {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // también al insertar a mano en SQL
+  tipo                String // ANALISIS · PLAN_PIEZA · IMAGEN_DIAPOSITIVA · PUBLICAR_INSTAGRAM · RENOVAR_TOKENS_IG · PRUEBA
+  estado              String    @default("PENDIENTE") // PENDIENTE · EN_CURSO · HECHO · ERROR · CANCELADO
+  fase                Int       @default(0) // la siguiente fase que hay que ejecutar
+  datos               Json      @default("{}")
+  intentos            Int       @default(0) // fallos seguidos de la fase actual
+  ejecutar_despues_de DateTime  @default(now()) @db.Timestamptz(6)
+  bloqueado_en        DateTime? @db.Timestamptz(6) // cuándo lo reclamó el worker
+  idempotency_key     String?   @unique // evita encolar dos veces lo mismo
+  error               String?
+  creado_en           DateTime  @default(now()) @db.Timestamptz(6)
+  actualizado_en      DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@index([estado, ejecutar_despues_de])
+}
