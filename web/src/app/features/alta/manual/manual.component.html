@@ -1,0 +1,76 @@
+<section class="mx-auto flex w-full max-w-xl flex-col gap-espacio-16">
+  <header>
+    <a routerLink="/alta/buscar" class="text-cuerpo-secundario-12-5 font-bold text-azul underline">← Atrás</a>
+    <h1 class="mt-espacio-8 font-display text-titulo-pantalla-24 text-tinta">Añade tu local</h1>
+    <p class="mt-espacio-6 text-cuerpo-secundario-12-5 text-texto-secundario">
+      Si tu local no aparece en Google Maps, cuéntanos cómo es para empezar el análisis.
+    </p>
+  </header>
+
+  <app-tarjeta-cristal densidad="denso">
+    <form class="flex flex-col gap-espacio-14" [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+      <app-campo-cristal
+        etiqueta="Nombre del local"
+        marcador="Bar El Boquerón Dorado"
+        [control]="formulario.controls.nombre"
+        [error]="errorNombre"
+      />
+
+      <div>
+        <p class="mb-espacio-6 text-etiqueta-sobretitulo-11-5 uppercase text-texto-terciario">Tipo de local</p>
+        <div class="flex flex-wrap gap-espacio-8">
+          @for (tipo of tipos; track tipo.valor) {
+            <app-chip [activo]="formulario.controls.tipo.value === tipo.valor" (pulsado)="elegirTipo(tipo.valor)">
+              {{ tipo.etiqueta }}
+            </app-chip>
+          }
+        </div>
+        @if (errorTipo) {
+          <p class="mt-espacio-6 text-cuerpo-pequeno-11-5 text-alerta">{{ errorTipo }}</p>
+        }
+      </div>
+
+      <app-campo-cristal
+        etiqueta="Dirección"
+        marcador="Calle Larios 12"
+        [control]="formulario.controls.direccion"
+        [error]="errorDireccion"
+      />
+
+      <app-campo-cristal
+        etiqueta="Municipio"
+        marcador="Málaga"
+        [control]="formulario.controls.municipio"
+        [error]="errorMunicipio"
+      />
+
+      <app-campo-cristal
+        etiqueta="Web (opcional)"
+        tipo="url"
+        marcador="https://milocal.es"
+        [control]="formulario.controls.web"
+        [error]="errorWeb"
+      />
+
+      <app-campo-cristal
+        etiqueta="Instagram (opcional)"
+        marcador="milocal"
+        ayuda="Sin la arroba."
+        [control]="formulario.controls.instagram"
+        [error]="errorInstagram"
+      />
+
+      <app-casilla [control]="formulario.controls.declaraGestor" [error]="errorDeclaraGestor">
+        Declaro que gestiono este local
+      </app-casilla>
+
+      @if (mensajeError) {
+        <p class="text-cuerpo-secundario-12-5 text-alerta">{{ mensajeError }}</p>
+      }
+
+      <app-boton tipo="submit" [anchoCompleto]="true" [deshabilitado]="guardando">
+        {{ guardando ? 'Guardando…' : 'Guardar y analizar' }}
+      </app-boton>
+    </form>
+  </app-tarjeta-cristal>
+</section>

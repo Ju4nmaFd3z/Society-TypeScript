@@ -29,8 +29,8 @@ export const routes: Routes = [
       { path: '', redirectTo: 'resumen', pathMatch: 'full' },
 
       // Con sesión, aunque el local no esté dado de alta
-      { path: 'alta/buscar', loadComponent: paginaVacia, data: { titulo: 'Alta · Buscar tu local' } },
-      { path: 'alta/manual', loadComponent: paginaVacia, data: { titulo: 'Alta · Añadir a mano' } },
+      { path: 'alta/buscar', loadComponent: () => import('./features/alta/buscar/buscar.component').then((m) => m.BuscarComponent), data: { titulo: 'Alta · Buscar tu local' } },
+      { path: 'alta/manual', loadComponent: () => import('./features/alta/manual/manual.component').then((m) => m.ManualComponent), data: { titulo: 'Alta · Añadir a mano' } },
       { path: 'alta/analisis/:id', loadComponent: paginaVacia, data: { titulo: 'Alta · Análisis' } },
       { path: 'ficha', loadComponent: paginaVacia, data: { titulo: 'Alta / Ficha' } },
       { path: 'perfil', loadComponent: paginaVacia, data: { titulo: 'Perfil' } },
