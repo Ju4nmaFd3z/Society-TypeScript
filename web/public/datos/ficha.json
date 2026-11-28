@@ -1,0 +1,36 @@
+{
+  "ficha": {
+    "nombre": "Bar El Boquerón Dorado",
+    "descripcionCorta": "Pescaíto frito y tapas de siempre a dos pasos de la calle Larios.",
+    "tonos": ["Cercano", "Tradicional", "Apetitoso"],
+    "fraseEjemplo": "Hoy el boquerón viene recién llegado de la lonja. ¿Te pongo una ración?",
+    "colores": [
+      { "nombre": "Dorado rótulo", "hex": "#E3A72F", "origen": "GOOGLE", "editado": false },
+      { "nombre": "Azul marinero", "hex": "#1F4E79", "origen": "WEB", "editado": false },
+      { "nombre": "Blanco cal", "hex": "#F7F4EC", "origen": "IA", "editado": false },
+      { "nombre": "Madera barra", "hex": "#8A5A3B", "origen": "IA", "editado": false },
+      { "nombre": "Verde azulejo", "hex": "#2F7D6D", "origen": "GOOGLE", "editado": false }
+    ],
+    "tipografias": [
+      { "rol": "TITULOS", "familia": "Playfair Display", "coincidencia": 0.82, "origen": "WEB" },
+      { "rol": "TEXTO", "familia": "Nunito", "coincidencia": 0.67, "origen": "IA" }
+    ],
+    "canales": [
+      { "tipo": "WEB", "valor": "https://boqueron-dorado.es" },
+      { "tipo": "TELEFONO", "valor": "+34 952 00 00 00" }
+    ],
+    "origenPorCampo": {
+      "nombre": "GOOGLE",
+      "descripcionCorta": "IA",
+      "tonos": "IA",
+      "fraseEjemplo": "IA",
+      "colores": "IA",
+      "tipografias": "WEB",
+      "canales": "GOOGLE"
+    },
+    "version": 1,
+    "origenAlta": "GOOGLE"
+  },
+  "resumenGoogle": { "valoracion": 4.6, "numResenas": 1280 },
+  "instagram": { "conectado": false }
+}

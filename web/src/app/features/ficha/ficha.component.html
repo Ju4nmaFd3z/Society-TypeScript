@@ -1,0 +1,108 @@
+<section class="mx-auto flex w-full max-w-2xl flex-col gap-espacio-16">
+  <header>
+    <p class="text-etiqueta-sobretitulo-11-5 uppercase text-texto-terciario">Tu ficha · Paso 4 de 6</p>
+    <h1 class="mt-espacio-6 font-display text-titulo-pantalla-24 text-tinta">Así te ve internet</h1>
+    <p class="mt-espacio-6 text-cuerpo-secundario-12-5 text-texto-secundario">Si algo no está bien, toca el lápiz y cámbialo.</p>
+  </header>
+
+  @if (estado.tipo === 'cargando') {
+    <app-estado-cargando />
+  } @else if (estado.tipo === 'error') {
+    <app-estado-error (reintentar)="cargar()" />
+  } @else if (estado.tipo === 'conDatos') {
+    <app-bloque-ficha titulo="Tu local" [origen]="estado.ficha.origenPorCampo.nombre" [editable]="true" (editar)="editar('nombre')">
+      <p class="text-cuerpo-destacado-15 text-tinta">{{ estado.ficha.nombre }}</p>
+    </app-bloque-ficha>
+
+    <app-bloque-ficha
+      titulo="Descripción"
+      [origen]="estado.ficha.origenPorCampo.descripcionCorta"
+      [editable]="true"
+      (editar)="editar('descripcionCorta')"
+    >
+      <p class="text-cuerpo-secundario-12-5 text-texto-secundario">{{ estado.ficha.descripcionCorta }}</p>
+    </app-bloque-ficha>
+
+    @if (estado.resumenGoogle; as resumen) {
+      <app-bloque-ficha titulo="Valoración en Google" origen="GOOGLE">
+        <p class="text-cuerpo-destacado-15 text-tinta">★ {{ resumen.valoracion }} · {{ resumen.numResenas }} reseñas</p>
+      </app-bloque-ficha>
+    } @else {
+      <p class="text-cuerpo-secundario-12-5 text-texto-secundario">
+        Diste de alta tu local a mano, así que no enseñamos la valoración ni las reseñas de Google.
+      </p>
+    }
+
+    <app-bloque-ficha titulo="Cómo hablas" [origen]="estado.ficha.origenPorCampo.tonos" [editable]="true" (editar)="editar('tonos')">
+      <div class="flex flex-wrap gap-espacio-8">
+        @for (tono of estado.ficha.tonos; track tono) {
+          <span class="chip cristal-claro">{{ tono }}</span>
+        }
+      </div>
+    </app-bloque-ficha>
+
+    <app-bloque-ficha
+      titulo="Frase de ejemplo"
+      [origen]="estado.ficha.origenPorCampo.fraseEjemplo"
+      [editable]="true"
+      (editar)="editar('fraseEjemplo')"
+    >
+      <p class="text-cuerpo-secundario-12-5 text-texto-secundario">«{{ estado.ficha.fraseEjemplo }}»</p>
+    </app-bloque-ficha>
+
+    <app-bloque-ficha titulo="Tus colores y letras" [origen]="estado.ficha.origenPorCampo.colores">
+      <div class="flex flex-wrap gap-espacio-10">
+        @for (color of estado.ficha.colores; track color.hex) {
+          <div class="flex items-center gap-espacio-6">
+            <span class="size-6 rounded-chip border border-tinta/10" [style.background-color]="color.hex"></span>
+            <span class="text-cuerpo-pequeno-11-5 text-texto-secundario">{{ color.nombre }}</span>
+          </div>
+        }
+      </div>
+      <ul class="mt-espacio-10 flex flex-col gap-espacio-6">
+        @for (tipografia of estado.ficha.tipografias; track tipografia.rol) {
+          <li class="text-cuerpo-secundario-12-5 text-texto-secundario">
+            {{ tipografia.familia }} · {{ tipografia.coincidencia | percent }} de parecido
+          </li>
+        }
+      </ul>
+    </app-bloque-ficha>
+
+    <app-bloque-ficha titulo="Dónde te encuentran" [origen]="estado.ficha.origenPorCampo.canales">
+      <ul class="flex flex-col gap-espacio-6">
+        @for (canal of estado.ficha.canales; track canal.tipo) {
+          <li class="text-cuerpo-secundario-12-5 text-texto-secundario">{{ nombreDeCanal[canal.tipo] }}: {{ canal.valor }}</li>
+        }
+      </ul>
+      <div class="mt-espacio-10">
+        @if (estado.instagram.conectado) {
+          <p class="text-cuerpo-secundario-12-5 text-positivo">Instagram conectado: {{ '@' + estado.instagram.usuario }}</p>
+        } @else {
+          <!-- PROVISIONAL: sin acción hasta el OAuth de Instagram (SOCIETY-92) -->
+          <app-boton variante="secundario" [deshabilitado]="true">Conectar Instagram</app-boton>
+        }
+      </div>
+    </app-bloque-ficha>
+
+    @if (!puedeConfirmar) {
+      <p class="text-cuerpo-secundario-12-5 text-alerta">Para seguir, tu ficha necesita el nombre y al menos un tono.</p>
+    }
+    @if (mensajeConfirmar) {
+      <p class="text-cuerpo-secundario-12-5 text-alerta">{{ mensajeConfirmar }}</p>
+    }
+    <app-boton [anchoCompleto]="true" [deshabilitado]="!puedeConfirmar || confirmando" (click)="confirmar()">
+      {{ confirmando ? 'Guardando…' : 'Todo correcto, seguir' }}
+    </app-boton>
+
+    @if (editando) {
+      <app-edicion-campo
+        [campo]="editando"
+        [valor]="estado.ficha[editando]"
+        [guardando]="guardando"
+        [error]="errorEdicion"
+        (guardar)="guardarCampo($event)"
+        (cancelar)="cancelarEdicion()"
+      />
+    }
+  }
+</section>

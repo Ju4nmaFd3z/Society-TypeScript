@@ -20,6 +20,13 @@ describe('SesionSimuladaService', () => {
     expect(sesion.rutaDeInicio()).toBe('/alta/buscar');
   });
 
+  it('al completar el alta la cuenta nueva pasa a ir al resumen', () => {
+    sesion.registrar('nuevo@ejemplo.es');
+    sesion.completarAlta();
+    expect(sesion.altaCompletada()).toBeTrue();
+    expect(sesion.rutaDeInicio()).toBe('/resumen');
+  });
+
   it('un correo desconocido no entra', () => {
     expect(sesion.iniciarSesion('nadie@ejemplo.es')).toBeFalse();
     expect(sesion.haySesion()).toBeFalse();
